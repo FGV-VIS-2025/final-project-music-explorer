@@ -13,6 +13,7 @@ filtered = list()
 filtered_rock = list()
 filtered_only_features = list()
 artist_map = dict()
+work_map = dict()
 
 #Counting hash maps
 counts = defaultdict(lambda: 0)
@@ -48,24 +49,67 @@ def iter_in_file(tar_name, file_name):
     tar_call.wait()
     xz_call.wait()
 
+autorship = ["autorship", "writer", "composer", "lyricist", "librettist", "revised by", "scriptwriter", "translator", "reconstructed by", "arranger", "instrument arranger", "orchestrator", "vocal arranger", "adapter", "previous attribution"]
+performance = ["performance", "performer", "instrument", "vocal", "performing orchestra", "conductor", "chorus master", "concertmaster", "audio director"]
+
+
 for index, line in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist")):
-    line = line.decode("utf-8", errors="replace").rstrip("\n")
+    line = line.decode("utf-8", errors = "replace").rstrip("\n")
     dictionary = json.loads(line)
     if(len(dictionary["relations"]) > 0):
         entry = {
             "n": dictionary["name"],
             "ms": set(),
-            "im": set()
+            "im": set(),
+            "cs": set(),
+            "gc": set(),
         }
         for relation in dictionary["relations"]:
             if relation["target-type"] == "artist" and relation["type"] == "member of band":
-                if relation["direction"] == "foward" and relation["artist"]["id"] not in entry["im"]:
+                if relation["direction"] == "forward":
                     entry["im"].add(relation["artist"]["id"])
-                elif relation["direction"] == "backward" and relation["artist"]["id"] not in entry["ms"]:
+                elif relation["direction"] == "backward":
                     entry["ms"].add(relation["artist"]["id"])
-        entry["ms"] = list(entry["ms"])
-        entry["im"] = list(entry["im"])
-        artist_map[dictionary["id"]] = entry
+    artist_map[dictionary["id"]] = entry
+
+for index, line in tqdm(iter_in_file("tarxz/work.tar.xz", "mbdump/work")):
+    line = line.decode("utf-8", errors = "replace").rstrip("\n")
+    dictionary = json.loads(line)
+    if(len(dictionary["relations"]) > 0):
+        entry = {
+            "n": dictionary["title"],
+            "a": set()
+        }
+        for relation in dictionary["relations"]:
+            if relation["type"] in autorship:
+                entry["a"].add(relation["artist"]["id"])
+        work_map[dictionary["id"]] = entry
+
+for index, line in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release")):
+    line = line.decode("utf-8", errors = "replace").rstrip("\n")
+    dictionary = json.loads(line)
+    if dictionary.get("media") and len(dictionary["media"]) > 0:
+        for media in dictionary["media"]:
+            if media.get("tracks"):
+                for track in media["tracks"]:
+                    recording = track["recording"]
+                    for relation in recording["relations"]:
+                        if relation["target-type"] == "work" and "cover" in relation["attributes"]:
+                            cover_of = relation["work"]["id"]
+                            for relation in recording["relations"]:
+                                if relation["target-type"] == "artist" and relation["type"] in performance:
+                                    if cover_of == "eff5007f-e7e4-3487-baac-e67bd7a10598":
+                                        pprint(dictionary)
+                                    for artist in work_map[cover_of]["a"]:
+                                        artist_map[relation["artist"]["id"]]["cs"].add(artist)
+                                        artist_map[artist]["gc"].add(relation["artist"]["id"])
+
+
+# for index, line in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording")):
+#     line = line.decode("utf-8", errors = "replace").rstrip("\n")
+#     dictionary = json.loads(line)
+#             break
+
 
     # generos = dictionary.get("genres", list())
     # if len(generos) != 0:
@@ -87,9 +131,19 @@ for index, line in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist")):
     #         filtered_rock.append(dictionary)
 
 print("Writing artists map to json")
+for artist in artist_map:
+    artist_map[artist]["ms"] = list(artist_map[artist]["ms"])
+    artist_map[artist]["im"] = list(artist_map[artist]["im"])
+    artist_map[artist]["cs"] = list(artist_map[artist]["cs"])
+    artist_map[artist]["gc"] = list(artist_map[artist]["gc"])
 with open("output/artist_map.json", "w") as f:
     json.dump(artist_map, f, indent = 2)
 
+print("Writing work map to json")
+for work in work_map:
+    work_map[work]["a"] = list(work_map[work]["a"])
+with open("output/work_map.json", "w") as f:
+    json.dump(work_map, f, indent = 2)
 # pprint(counts)
 # pprint(counts_rock)
 # print(index)
