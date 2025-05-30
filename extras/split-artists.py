@@ -11,9 +11,9 @@ alphabet_dict = defaultdict(lambda: dict())
 
 print("Mapping alphabetic dictionaries...")
 for artist_id, artist_dict in tqdm(artist_map.items()):
-    alphabet_dict[artist_id[0]][artist_id] = artist_dict
+    alphabet_dict[artist_id[0:2]][artist_id] = artist_dict
 
 print("Writing alphabetic split...")
 for letter in tqdm(alphabet_dict):
-    with open(f"output/{letter}_graph.json", "w") as f:
+    with open(f"../static/graph/{letter}.json", "w") as f:
         json.dump(alphabet_dict[letter], f)

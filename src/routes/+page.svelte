@@ -5,6 +5,7 @@
 
     let width = 1280;
     let height = 720;
+    let svgNode;
 
     let searchInput = "";
     $: console.log(searchInput);
@@ -19,11 +20,11 @@
 
     //Gets a id and add a node object to the nodes array
     async function addNode(id){
-        let letter = id.charAt(0);
+        let letter = id.slice(0, 2);
         if(!(letter in cache)) {
             console.log(`Pedindo dados de grafo para a letra ${letter}`);
             try {
-                const response = await fetch(`${letter}_graph.json`);
+                const response = await fetch(`graph/${letter}.json`);
                 if (!response.ok){
                     throw new Error(`Não foi possível solicitar os dados de grafo para a letra ${letter}`)
                 }
@@ -42,7 +43,7 @@
 
     //Add edges of an node to other nodes in the graph. Adds the other nodes if necessary
     async function addNodeRelations(id){
-        let letter = id.charAt(0);
+        let letter = id.slice(0, 2);
         //I assume the cache exists since this function will not be called if the node isnt in the graph in the first place.
         const nodeInfo = cache[letter][id];
         for(let relation of relations){
@@ -102,7 +103,10 @@
     <div id="suggestions-list"></div>
 </div>
 
-<svg id="genre-graph" width={width} height={height} viewBox="[0, 0, {width}, {height}]"
+<svg id="genre-graph"
+     width={width} height={height}
+     viewBox="[0, 0, {width}, {height}]"
+     bind:this={svgNode}
 ></svg>
 <div class="tooltip"></div>
 
