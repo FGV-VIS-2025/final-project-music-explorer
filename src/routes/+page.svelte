@@ -87,7 +87,8 @@
         }
     }
 
-    function handleDrag(graphSim) {
+    //Functions to handle node dragging
+    function nodeDrag(graphSim) {
         function dragstarted(event, d) {
             if (!event.active) graphSim.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -119,16 +120,17 @@
     let svgNodes;
     function updateGraph() {
         const svg = d3.select(svgNode);
+        const zoomGroup = d3.select("#zoom-group");
 
         if (!simulation) {
-            //Create simulation and initial classes if they didnt exist before;
+            //Create simulation and initial classes if they didnt exist before
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id((d) => d.id).distance(100))
                 .force("charge", d3.forceManyBody().strength(-300))
                 .force("center", d3.forceCenter(width / 2, height / 2));
 
-            svgEdges = svg.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
-            svgNodes = svg.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
+            svgEdges = zoomGroup.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
+            svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
 
             simulation.on("tick", () => {
                 svgEdges.selectAll("line")
@@ -139,12 +141,23 @@
                 svgNodes.selectAll("g")
                     .attr("transform", (d) => `translate(${d.x},${d.y})`);
             });
+
+            const zoomBehavior = d3.zoom()
+                .extent([[0, 0], [width, height]])
+                .scaleExtent([0.1, 10])
+                .on("zoom", (event) => {
+                    zoomGroup.attr("transform", event.transform);
+                });
+            svg.call(zoomBehavior);
         }
 
+        //Update simulation internal node and edge lists with possible new nodes and edges
         simulation.nodes(nodes);
         simulation.force("link").links(edges);
+        //Start a new animation with the updated data
         simulation.alpha(1).restart();
 
+        //Apply updates to all nodes and edges, existing or new
         svgEdges.selectAll("line")
             .data(edges, d => `${d.source.id}-${d.target.id}-${d.type}`)
             .join(enter => enter.append("line")
@@ -158,7 +171,7 @@
             .data(nodes, d => d.id)
             .join(enter => {
                     const g = enter.append("g")
-                        .call(handleDrag(simulation))
+                        .call(nodeDrag(simulation))
                         .on("click", nodeClick);
                     g.append("circle")
                         .attr("r", 20)
@@ -171,9 +184,9 @@
                         .attr("font-size", "10px")
                         .text(d => d.n);
                     return g;
-                },
-                update => update,
-                exit => exit.remove()
+                  },
+                  update => update,
+                  exit => exit.remove()
             );
     }
 
@@ -223,13 +236,13 @@
 <svg id="genre-graph"
      width="{width}" height="{height}"
      viewBox="[0, 0, {width}, {height}]"
-     bind:this={svgNode}
->
-<!--<g stroke="#999" stroke-width="1.5" class="edges">
+     bind:this={svgNode}>
+     <g id="zoom-group"></g>
+    <!--<g stroke="#999" stroke-width="1.5" class="edges">
     {#each edges as edge}
         <line class="edge {edge.type}"
-            x1={edge.source.x} y1={edge.source.y}
-            x2={edge.target.x} y2={edge.target.y}/>
+              x1={edge.source.x} y1={edge.source.y}
+              x2={edge.target.x} y2={edge.target.y}/>
     {/each}
     </g>
     <g class="nodes">
@@ -243,10 +256,17 @@
 <div class="tooltip"></div>
 
 <style>
+    svg {
+        border-style: solid;
+        border-width: 3px;
+        border-color: green;
+    }
+
     .node-circle {
         stroke: white;
         stroke-width: 1.5px;
     }
+
     .node-text {
         fill: white;
         font-size: 10px;
