@@ -3,19 +3,21 @@ from tqdm import tqdm
 #File opening
 import tarfile
 import subprocess
+from os.path import isfile
 #Data processing
 import json
 from collections import defaultdict
 from pprint import pprint
 
-#Different outputs of the script
+
+#Helper dictionaries and outputs
 filtered = list()
 filtered_rock = list()
 filtered_only_features = list()
 artist_map = dict()
 work_map = dict()
 
-#Counting hash maps
+#Counting hash tables
 counts = defaultdict(lambda: 0)
 counts_rock = defaultdict(lambda: 0)
 
@@ -24,6 +26,12 @@ counts_rock = defaultdict(lambda: 0)
 #we get a buffer in which we cant use seek, and so the python standard features
 #to iter in the buffer will error out. So the approach is to use shell commands.
 #they are wrapped here into an iterator to convenience
+
+for tar in ["tarxz/artist.tar.xz", "tarxz/work.tar.xz", "tarxz/release.tar.xz", "tarxz/recording.tar.xz"]:
+    if not (isfile(tar) and tarfile.is_tarfile(tar)):
+        print(tar, "is missing! Aborting to prevent bad surprises...")
+        exit()
+
 def iter_in_file(tar_name, file_name):
     if not tarfile.is_tarfile(tar_name):
         print(tar_name, "isn't a tar xz file!")
@@ -42,7 +50,9 @@ def iter_in_file(tar_name, file_name):
     xz_call.stdout.close()
 
     for index, line in enumerate(tar_call.stdout):
-        yield index, line
+        line = line.decode("utf-8", errors = "replace").rstrip("\n")
+        dictionary = json.loads(line)
+        yield index, dictionary
 
     print("Closing subprocesses and pipes")
     tar_call.stdout.close()
@@ -52,16 +62,13 @@ def iter_in_file(tar_name, file_name):
 autorship = ["autorship", "writer", "composer", "lyricist", "librettist", "revised by", "scriptwriter", "translator", "reconstructed by", "arranger", "instrument arranger", "orchestrator", "vocal arranger", "adapter", "previous attribution"]
 performance = ["performance", "performer", "instrument", "vocal", "performing orchestra", "conductor", "chorus master", "concertmaster", "audio director"]
 
-
-for index, line in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist"), total = 2557693):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist"), total = 2557693):
     if(len(dictionary["relations"]) > 0):
         entry = {
             "n": dictionary["name"],
             "ms": set(), #members
             "im": set(), #member of
-            "cs": set(), #covers someone
+            "cs": defaultdict(lambda: set()), #covers someone
             "gc": set(), #got covered by someone
         }
         for relation in dictionary["relations"]:
@@ -72,9 +79,7 @@ for index, line in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist"), to
                     entry["ms"].add(relation["artist"]["id"])
     artist_map[dictionary["id"]] = entry
 
-for index, line in tqdm(iter_in_file("tarxz/work.tar.xz", "mbdump/work"), total = 2322880):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/work.tar.xz", "mbdump/work"), total = 2322880):
     if(len(dictionary["relations"]) > 0):
         entry = {
             "n": dictionary["title"],
@@ -87,9 +92,7 @@ for index, line in tqdm(iter_in_file("tarxz/work.tar.xz", "mbdump/work"), total 
         work_map[dictionary["id"]] = entry
 
 #map works to authors - different logic than just seeing relations to captude bands and such
-for index, line in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
     for media in dictionary.get("media", []):
         for track in media.get("tracks", []):
             for relation in track["recording"]["relations"]:
@@ -98,10 +101,7 @@ for index, line in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), 
                     for artist_meta in track["artist-credit"]:
                             work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
 
-
-for index, line in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
         if relation["target-type"] == "work" and not ("cover" in relation["attributes"]):
             work_id = relation["work"]["id"]
@@ -118,9 +118,7 @@ for work in tqdm(work_map):
     work_map[work]["a"] = true_authors
 
 
-for index, line in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
     for media in dictionary.get("media", []):
         for track in media.get("tracks", []):
             for relation in track["recording"]["relations"]:
@@ -129,20 +127,21 @@ for index, line in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), 
                     for cover_artist in track["artist-credit"]:
                         cover_artist = cover_artist["artist"]["id"]
                         for og_artist in work_map[cover_of]["a"]:
-                            artist_map[cover_artist]["cs"].add(og_artist)
+                            if og_artist == cover_artist:
+                                continue
+                            artist_map[cover_artist]["cs"][og_artist].add(cover_of)
                             artist_map[og_artist]["gc"].add(cover_artist)
 
-
-for index, line in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
-    line = line.decode("utf-8", errors = "replace").rstrip("\n")
-    dictionary = json.loads(line)
+for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
         if relation["target-type"] == "work" and "cover" in relation["attributes"]:
             cover_of = relation["work"]["id"]
             for cover_artist in dictionary["artist-credit"]:
                 cover_artist = cover_artist["artist"]["id"]
                 for og_artist in work_map[cover_of]["a"]:
-                    artist_map[cover_artist]["cs"].add(og_artist)
+                    if og_artist == cover_artist:
+                        continue
+                    artist_map[cover_artist]["cs"][og_artist].add(cover_of)
                     artist_map[og_artist]["gc"].add(cover_artist)
 
     # generos = dictionary.get("genres", list())
@@ -168,8 +167,10 @@ print("Writing artists map to json")
 for artist in artist_map:
     artist_map[artist]["ms"] = list(artist_map[artist]["ms"])
     artist_map[artist]["im"] = list(artist_map[artist]["im"])
-    artist_map[artist]["cs"] = list(artist_map[artist]["cs"])
+    for key in artist_map[artist]["cs"]:
+        artist_map[artist]["cs"][key] = list(artist_map[artist]["cs"][key])
     artist_map[artist]["gc"] = list(artist_map[artist]["gc"])
+
 with open("output/artist_map.json", "w") as f:
     json.dump(artist_map, f, indent = 2)
 
