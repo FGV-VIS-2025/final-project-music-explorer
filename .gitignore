@@ -11,4 +11,5 @@ vite.config.ts.timestamp-*
 .ipynb_checkpoints/
 .virtual_documents/
 extras/tarxz/*
+extras/output/*.json
 static/graph/*
