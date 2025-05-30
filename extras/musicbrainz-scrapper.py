@@ -54,5 +54,5 @@ for i in tqdm(range(len(links))):
     #     break
 
 json_genres = json.dumps(genres_dict, indent=4, ensure_ascii=False)
-with open("genres.json", "w", encoding="utf-8") as f:
+with open("output/genres.json", "w", encoding="utf-8") as f:
     f.write(json_genres)
