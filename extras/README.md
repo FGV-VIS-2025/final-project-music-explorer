@@ -7,7 +7,7 @@ este readme.
 
 Para gerar o grafo de gêneros, basta executar o script scrapper:
 
-```py
+```bash
 $ python musicbrainz-scrapper.py
 ```
 
@@ -16,7 +16,7 @@ arquivos de dump baixados e colocados no diretório `tarxz`: `artist.tar.xz`,
 `recording.tar.xz`, `release.tar.xz` e `work.tar.xz`. Após estarem devidamente
 colocados no diretório, basta usar o script:
 
-```py
+```bash
 $ python process-artists.py
 ```
 

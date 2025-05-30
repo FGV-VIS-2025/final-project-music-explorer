@@ -1,4 +1,4 @@
-#progressbar
+#progress bar
 from tqdm import tqdm
 #File opening
 import tarfile
@@ -80,6 +80,7 @@ for index, line in tqdm(iter_in_file("tarxz/work.tar.xz", "mbdump/work"), total 
             "n": dictionary["title"],
             "a": defaultdict(lambda: 0)
         }
+        # Old code that badly got work autorship
         # for relation in dictionary["relations"]:
         #     if relation["type"] in autorship:
         #         entry["a"].add(relation["artist"]["id"])
@@ -144,12 +145,6 @@ for index, line in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording
                     artist_map[cover_artist]["cs"].add(og_artist)
                     artist_map[og_artist]["gc"].add(cover_artist)
 
-# for index, line in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording")):
-#     line = line.decode("utf-8", errors = "replace").rstrip("\n")
-#     dictionary = json.loads(line)
-#             break
-
-
     # generos = dictionary.get("genres", list())
     # if len(generos) != 0:
     #     filtered.append(dictionary)
@@ -179,10 +174,9 @@ with open("output/artist_map.json", "w") as f:
     json.dump(artist_map, f, indent = 2)
 
 print("Writing work map to json")
-# for work in work_map:
-#     work_map[work]["a"] = list(work_map[work]["a"])
 with open("output/work_map.json", "w") as f:
     json.dump(work_map, f, indent = 2)
+
 # pprint(counts)
 # pprint(counts_rock)
 # print(index)
@@ -201,23 +195,3 @@ with open("output/work_map.json", "w") as f:
 # print("escrevendo counts de rock")
 # with open("rock_counts.json", "w") as f:
 #     json.dump(counts_rock, f, indent = 2)
-
-
-#
-# with tarfile.open("artist.tar.xz", "r|xz") as compacted:
-#     artists = compacted.getmember("mbdump/artist")
-#     print("Got member info of artist file")
-#     artists = compacted.extractfile(artists)
-#     print("Got file representation of extractedfile")
-#     read_buffer = b""
-#     while True:
-#         chunk = artists.read1(1024 * 1024 * 100) #100 MiB per read - since I have memory :D
-#         if not chunk:
-#             break
-#         print(chunk)
-#
-#
-# exit()
-#
-# with open("artist", "r") as f:
-#     for index, line in enumerate(f):
