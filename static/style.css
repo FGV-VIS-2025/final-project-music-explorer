@@ -1,0 +1,19 @@
+:root {
+	/*Esquema de cores do site*/
+	--accent-black: #1F1F1F; /*Cor do fundo do site*/
+	--font-color: #FFFFFF; /*Cor da fonte*/
+	--border-color: #FFFFFF;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif&display=swap');
+
+/*Regras gerais de conteúdo para o corpo de todas as páginas*/
+body, html {
+	margin: 0;
+	padding: 0;
+	background-color: var(--accent-black);
+}
+
+* {
+	color: var(--font-color);
+}
