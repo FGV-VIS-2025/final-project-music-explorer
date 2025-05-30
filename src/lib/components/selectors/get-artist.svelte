@@ -11,7 +11,6 @@
     let successfulSearch = false;
     //To manage user choice on results
     let searchResults = [];
-    let selectedResult;
 
     function searchArtists(evt) {
         evt.preventDefault();
@@ -27,11 +26,9 @@
                     console.log(data);
                     successfulSearch = true;
                     searchResults = data.artists;
-                    selectedResult = 0;
                 } else {
                     successfulSearch = false;
                     searchResults = [];
-                    selectedResults = -1;
                 }
             })
             .catch((error) => {
@@ -39,21 +36,13 @@
                 successfulRequest = false;
                 successfulSearch = false;
                 searchResults = [];
-                selectedResult = -1;
             });
     }
 
     function onResultClick(evt, index) {
-        selectedResult = index;
+        artistId = searchResults[index].id;
     }
 
-    $: {
-        if (searchResults.length > 0) {
-            artistId = searchResults[selectedResult].id;
-        } else {
-            artistId = null;
-        }
-    }
 </script>
 
 <div class="container">
@@ -82,21 +71,11 @@
     {:else}
         <div class="results">
             {#each searchResults as result, index}
-                {#if selectedResult == index}
-                    <button
-                        class="searchResult selected"
-                        on:click={(evt) => onResultClick(evt, index)}
-                    >
-                        {result.name}
-                    </button>
-                {:else}
-                    <button
-                        class="searchResult"
-                        on:click={(evt) => onResultClick(evt, index)}
-                    >
-                        {result.name}
-                    </button>
-                {/if}
+                <button
+                    class="searchResult"
+                    on:click={(evt) => onResultClick(evt, index)}>
+                    {result.name}
+                </button>
             {/each}
         </div>
     {/if}
