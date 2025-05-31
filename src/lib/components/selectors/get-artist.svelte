@@ -46,7 +46,6 @@
 </script>
 
 <div class="container">
-    <h3>Busque por um artista.</h3>
     <form on:submit={searchArtists}>
         <label for="cityInput">
             Escreva o nome de um artista ou banda e aperte em buscar.

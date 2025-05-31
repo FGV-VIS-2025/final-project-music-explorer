@@ -17,3 +17,8 @@ body, html {
 * {
 	color: var(--font-color);
 }
+
+button {
+	background-color: transparent;
+	border: 2px solid var(--border-color);
+}
