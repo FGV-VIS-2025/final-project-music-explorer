@@ -5,7 +5,7 @@
 
     export let width = 1280;
     export let height = 720;
-    export let importArtist = null;
+    export let importArtist = null; //Input of the component, it will receive an id, focus on it and them set it to null
     let svgNode;
 
     let searchInput = "";
@@ -54,11 +54,10 @@
     //Add edges of an node to other nodes in the graph. Adds the other nodes if necessary
     async function addNodeRelations(id){
         if(simulation){
-            simulation.stop();
-            simulation.alpha(0);
+            simulation.stop().alpha(0);
         }
         let letter = id.slice(0, 2);
-        //I assume the cache exists since this function will not be called if the node isnt in the graph in the first place.
+        //I assume the cache exists since this function will not be called if the node isnt in the graph in the first place
         const nodeInfo = cache[letter][id];
         for(let relation of relations){
             if(Array.isArray(nodeInfo[relation])){
@@ -71,6 +70,7 @@
                         target: nodeMap.get(endId),
                         type: relation,
                     });
+                    updateGraph(null);
                 }
             } else {
                 for (const [endId, musics] of Object.entries(nodeInfo[relation])){
@@ -82,6 +82,7 @@
                         target: nodeMap.get(endId),
                         type: relation,
                     });
+                    updateGraph(null);
                 }
             }
         }
@@ -90,14 +91,16 @@
         console.log(`Adicionei arestas de ${id}`);
     }
 
+    //Handle external sent artist focusing event
     let expanding = false;
+    $: console.log("expandindo: ", expanding);
     $: {
         if(importArtist && !expanding){
             expanding = true;
             if (!nodeMap.has(importArtist)){
                 addNode(importArtist).then(() => {
                     addNodeRelations(importArtist).then(() => {
-                        console.log("add and expand", importArtist);
+                        console.log("adicionei e expandi artista", importArtist);
                         updateGraph(importArtist);
                         importArtist = null;
                         expanding = false;
@@ -105,24 +108,25 @@
                 });
             } else if (!nodeMap.get(importArtist).expanded){
                 addNodeRelations(importArtist).then(() => {
-                    console.log("expand", importArtist);
+                    console.log("expandi artista ", importArtist);
                     updateGraph(importArtist);
                     importArtist = null;
                     expanding = false;
                 });
             } else {
-                console.log("already expanded");
+                console.log("artista já estava expandido");
                 importArtist = null;
                 expanding = false;
             }
         }
     }
 
+    //Handle artist click event
     function nodeClick(event, node){
         if(!expanding){
             expanding = true;
             if (node.expanded){
-                console.log("node already expanded will do nothing");
+                console.log("nó já estava expandido");
                 expanding = false;
             } else {
                 addNodeRelations(node.id).then(() => {
@@ -162,15 +166,17 @@
     //the graph arrays everytime... An operation that can be expensive :( (yeah I would
     //love to handle this with svelte but the life is a cold and indifferent place)
 
-    //Data holding
+    //Variables to save D3 components
     let simulation;
     let svgEdges;
     let svgNodes;
-    //Zooming
+    //Variables to aid zooming
     let zoomBehavior;
     let tickCount = 0;
     let alreadyZoomed = false;
-    let focusNode;
+    let focusNode; //It is set based on the input to the function and set to null when the focus was applied
+
+    let highlightNode; //Variable to hold a node that is highlighted (mouse hover)
     function updateGraph(focusId) {
         const svg = d3.select(svgNode);
         const zoomGroup = d3.select("#zoom-group");
@@ -180,7 +186,7 @@
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id((d) => d.id).distance(100))
                 .force("charge", d3.forceManyBody().strength(-300))
-                .force("center", d3.forceCenter(width/2, height/2));
+                .force("center", d3.forceCenter(0, 0));
 
             svgEdges = zoomGroup.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
@@ -204,6 +210,7 @@
 
                 //If this animation should have focus, then focus after some ticks to get a stable focusing
                 tickCount++;
+                console.log(tickCount);
                 if(tickCount > 60 && !alreadyZoomed && focusNode){
                     console.log("zooming");
                     alreadyZoomed = true;
@@ -242,6 +249,8 @@
         }
 
         //Start a new animation with the updated data
+        tickCount = 0;
+        alreadyZoomed = false;
         simulation.alpha(1).restart();
         console.log("Animation started");
 
@@ -277,8 +286,12 @@
                   update => update,
                   exit => exit.remove()
             ).select("circle")
-                .attr("fill", d => d.expanded? "#0000FF" : "#FF0000");
+            .attr("fill", d => d.expanded? "#0000FF" : "#FF0000")
+            .on("mouseenter", (event, d) => {highlightNode = d})
+            .on("mouseleave", (event, d) => {highlightNode = null});
     }
+
+    $: console.log(highlightNode);
 
     onMount(() => {
         console.log("mounted");
