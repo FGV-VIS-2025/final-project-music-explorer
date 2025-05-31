@@ -50,7 +50,7 @@
         <label for="cityInput">
             Escreva o nome de um artista ou banda e aperte em buscar.
         </label>
-        <div class="searchBar">
+        <div class="artistSearchBar">
             <input id="cityInput" type="text" bind:value={userInput} required />
             <button type="submit">Buscar</button>
         </div>

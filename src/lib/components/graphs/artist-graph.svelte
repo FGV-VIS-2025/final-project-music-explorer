@@ -15,7 +15,14 @@
     let nodes = []; //Where node objects are saved
     let edges = []; //Where the edges are saved
     let nodeMap = new Map(); //Map to easen getting a node object by its id
+
     let relations = ["ms", "im", "cs"]; //Type of relations between nodes
+    let relationColors = {
+        "ms": "#d200d2",
+        "im": "#909090",
+        "cs": "#2a17f9",
+        "gc": "#fbff06"
+    }
     // let relations = ["cs"]; //Type of relations between nodes
     $: console.log(nodes);
     $: console.log(edges);
@@ -179,6 +186,7 @@
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
 
             simulation.on("end", () => {
+                //After the animation, reset variables and focus
                 tickCount = 0;
                 alreadyZoomed = false;
                 focusNode = null;
@@ -194,8 +202,8 @@
                 svgNodes.selectAll("g")
                     .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
+                //If this animation should have focus, then focus after some ticks to get a stable focusing
                 tickCount++;
-                console.log(tickCount);
                 if(tickCount > 60 && !alreadyZoomed && focusNode){
                     console.log("zooming");
                     alreadyZoomed = true;
@@ -204,10 +212,10 @@
                     const newTransform = d3.zoomIdentity
                         .translate(translateX, translateY)
                         .scale(1);
-                    svg.transition() // Inicia a transição
-                        .duration(500) // Define a duração da animação (em milissegundos)
+                    svg.transition() //Pan in with animation
+                        .duration(500)
                         .call(zoomBehavior.transform, newTransform);
-                    // zoomBehavior.transform(svg, newTransform);
+                    // zoomBehavior.transform(svg, newTransform); //Without animation
                 }
             });
 
@@ -218,7 +226,7 @@
                 .on("zoom", (event) => {
                     zoomGroup.attr("transform", event.transform);
                     ref.attr("transform", event.transform);
-                    console.log("changed to", event.transform);
+                    // console.log("changed to", event.transform);
                 });
             svg.call(zoomBehavior);
         }
@@ -228,6 +236,7 @@
         simulation.nodes(nodes);
         simulation.force("link").links(edges);
 
+        //Set variable to be acessed in tick updates
         if(focusId){
             focusNode = nodeMap.get(focusId);
         }
@@ -241,7 +250,8 @@
         svgEdges.selectAll("line")
             .data(edges, d => `${d.source.id}-${d.target.id}-${d.type}`)
             .join(enter => enter.append("line")
-                                .attr("class", d => `edge ${d.type}`),
+                                .attr("class", d => `edge relation-${d.type}`)
+                                .attr("stroke", d => relationColors[d.type]),
                                 // .attr("marker-end", d => `url(#arrowhead-${d.type})`),
                   update => update,
                   exit => exit.remove()
@@ -255,7 +265,6 @@
                         .on("click", nodeClick);
                     g.append("circle")
                         .attr("r", 20)
-                        .attr("fill", "#FF0000");
                     g.append("text")
                         .attr("dx", 0)
                         .attr("dy", "0.35em")
@@ -267,7 +276,8 @@
                   },
                   update => update,
                   exit => exit.remove()
-            );
+            ).select("circle")
+                .attr("fill", d => d.expanded? "#0000FF" : "#FF0000");
     }
 
     onMount(() => {
@@ -316,5 +326,6 @@
         dominant-baseline: middle;
         pointer-events: none;
     }
+
 
 </style>
