@@ -66,12 +66,17 @@ for index, dictionary in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist
     if(len(dictionary["relations"]) > 0):
         entry = {
             "n": dictionary["name"],
+            "r": False,
+            "c": 0,
             "ms": set(), #members
             "im": set(), #member of
             "cs": defaultdict(lambda: set()), #covers someone
             "gc": set(), #got covered by someone
         }
         for relation in dictionary["relations"]:
+            if relation["target-type"] == "artist" and relation["type"] == "tribute" and relation["direction"] == "forward" and not relation["ended"]:
+                entry["r"] = True #mark for remotion
+                # pprint(relation)
             if relation["target-type"] == "artist" and relation["type"] == "member of band":
                 if relation["direction"] == "forward":
                     entry["im"].add(relation["artist"]["id"])
@@ -99,7 +104,7 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                 if relation["target-type"] == "work" and not ("cover" in relation["attributes"]):
                     work_id = relation["work"]["id"]
                     for artist_meta in track["artist-credit"]:
-                            work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
+                            work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship
 
 for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
@@ -108,15 +113,18 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
             for artist_meta in dictionary["artist-credit"]:
                 work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
 
-
 for work in tqdm(work_map):
     total_sum = sum(work_map[work]["a"].values())
     true_authors = list()
     for artist, count in work_map[work]["a"].items():
         if count/total_sum > 0.1:
             true_authors.append(artist)
+            artist_map[artist]["c"] += 1 #authoral work count
     work_map[work]["a"] = true_authors
 
+for artist in tqdm(artist_map):
+    if artist_map[artist]["c"] == 0: #doenst have authoral music
+        artist_map[artist]["r"] = True #mark for remotion
 
 for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
     for media in dictionary.get("media", []):
@@ -126,7 +134,9 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                     cover_of = relation["work"]["id"]
                     for cover_artist in track["artist-credit"]:
                         cover_artist = cover_artist["artist"]["id"]
-                        for og_artist in work_map[cover_of]["a"]:
+                        if artist_map[cover_artist]["r"]: #doesnt add edges for artist that will be removed
+                            continue
+                        for og_artist in work_map[cover_of]["a"]: #no verification here because it wont be in any work authorship by the criteriom
                             if og_artist == cover_artist:
                                 continue
                             artist_map[cover_artist]["cs"][og_artist].add(cover_of)
@@ -138,6 +148,8 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
             cover_of = relation["work"]["id"]
             for cover_artist in dictionary["artist-credit"]:
                 cover_artist = cover_artist["artist"]["id"]
+                if artist_map[cover_artist]["r"]: #doesnt add edges for artist that will be removed
+                    continue
                 for og_artist in work_map[cover_of]["a"]:
                     if og_artist == cover_artist:
                         continue
@@ -164,12 +176,25 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
     #         filtered_rock.append(dictionary)
 
 print("Writing artists map to json")
+deletion_keys = []
 for artist in artist_map:
-    artist_map[artist]["ms"] = list(artist_map[artist]["ms"])
-    artist_map[artist]["im"] = list(artist_map[artist]["im"])
+    if artist_map[artist]["r"]: #see if its marked for remotion
+        deletion_keys.append(artist)
+        continue
+
+    new_entry = dict()
+    new_entry["n"] = artist_map[artist]["n"]
+    new_entry["ms"] = list(artist_map[artist]["ms"])
+    new_entry["im"] = list(artist_map[artist]["im"])
+    new_entry["cs"] = dict()
     for key in artist_map[artist]["cs"]:
-        artist_map[artist]["cs"][key] = list(artist_map[artist]["cs"][key])
-    artist_map[artist]["gc"] = list(artist_map[artist]["gc"])
+        new_entry["cs"][key] = list(artist_map[artist]["cs"][key])
+    new_entry["gc"] = list(artist_map[artist]["gc"])
+
+    artist_map[artist] = new_entry
+
+for artist in deletion_keys:
+    del artist_map[artist]
 
 with open("output/artist_map.json", "w") as f:
     json.dump(artist_map, f, indent = 2)
