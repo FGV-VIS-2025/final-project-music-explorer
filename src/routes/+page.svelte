@@ -6,7 +6,7 @@
     let artistId;
 </script>
 
-<h1>Music explorer</h1>
+<!-- <h1>Music explorer</h1> -->
 
 <SearchArtist bind:artistId={artistId}/>
 <ArtistGraph importArtist={artistId}/>

@@ -1,7 +1,9 @@
 :root {
 	/*Esquema de cores do site*/
-	--accent-black: #1F1F1F; /*Cor do fundo do site*/
-	--font-color: #FFFFFF; /*Cor da fonte*/
+	--accent-black: #1F1F1F;
+	/* --accent-black: #FAEAD7; */
+	--font-color: #FFFFFF; 
+	--font-color: #1F1F1F; /*Cor da fonte*/
 	--border-color: #FFFFFF;
 }
 
@@ -12,6 +14,12 @@ body, html {
 	margin: 0;
 	padding: 0;
 	background-color: var(--accent-black);
+}
+
+body {
+  background-image: radial-gradient(#1F1F1F 1px, transparent 0);
+  background-size: 40px 40px;
+  background-position: -19px -19px;
 }
 
 * {
