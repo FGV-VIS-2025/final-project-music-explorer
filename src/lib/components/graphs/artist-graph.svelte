@@ -23,6 +23,15 @@
         "#D99481",
     ];
 
+    const legendItems = [
+        { color: colorPallete[0], text: "Selected artist/band" },
+        { color: colorPallete[1], text: "Covered song from selected artist/band" },
+        { color: colorPallete[2], text: "Member of selected band" }, 
+        { color: colorPallete[3], text: "Band selected artist is Member Of" },
+        { color: colorPallete[4], text: "Artist/band Covered by selected artist/band" }, 
+        { color: "#a0a0a0", text: "Not directly related to the selected artist/band" },
+    ]
+
     // --- Logic for getting the color of each node ---
     let selectedNodeId = null;
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
@@ -44,12 +53,9 @@
             return colorPallete[0];
         }
 
-        // Removed specific Elvis Presley console logs as they were likely for debugging a specific case
-        // console.log("d", d); // Debug log removed
-
         // 2. If the related node has made a cover of him ("cs") - RED
         if (d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
-            return colorPallete[4];
+            return colorPallete[1];
         }
 
         // 3. If the related node is a member ("ms") - PURPLE
@@ -64,7 +70,7 @@
 
         // 5. If the related node is an artist the expanded node covered ("gc") - YELLOW
         if (selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
-            return colorPallete[1];
+            return colorPallete[4];
         }
 
         // Default color for other nodes
@@ -330,6 +336,31 @@
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
             svgLabels = zoomGroup.append("g").attr("class", "labels");
 
+            // --- Creating legend for the colors ---
+            const legendGroup = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(20, 20)")
+
+            legendItems.forEach((item, index) => {
+                const legendItemG = legendGroup.append('g')
+                    .attr("class", "legend-item")
+                    .attr("transform", `translate(0, ${index * 25})`)
+
+                legendItemG.append('rect')
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", item.color)
+
+                legendItemG.append('text')
+                    .attr("x", 24)
+                    .attr("y", 9)
+                    .attr("dy", "0.35em")
+                    .style("font-family", "sans-serif")
+                    .style("font-size", "12px")
+                    .style("fill", "#fff") // Text color for the legend
+                    .text(item.text);
+            })
+
             simulation.on("end", () => {
                 tickCount = 0;
                 alreadyZoomed = false;
@@ -462,7 +493,7 @@
     </div>
     <div class="tooltip">
         {#if highlightNode}
-            <div style="position: absolute; top: 230px; left: 10px; background: white; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
+            <div style="position: absolute; top: 350px; left: 140px; background: white; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
                 <strong>Artist:</strong> {highlightNode.n}
             </div>
         {/if}
@@ -476,6 +507,7 @@
     svg {
         border-style: solid;
         border-width: 3px;
+        max-height: 95vh;
         border-color: green;
         display: block; /* Often good for SVG to prevent extra space */
     }
