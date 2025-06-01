@@ -1,6 +1,5 @@
 <script>
     import * as d3 from "d3";
-
     import { onMount } from "svelte";
 
     export let width = 1280;
@@ -8,8 +7,7 @@
     export let importArtist = null; //Input of the component, it will receive an id, focus on it and them set it to null
     let svgNode;
 
-    let searchInput = "";
-    // $: console.log(searchInput);
+    // let searchInput = ""; // Removed: Unused variable
 
     let cache = {}; //Where to hold raw data fetched by file
     let nodes = []; //Where node objects are saved
@@ -23,72 +21,53 @@
         "#669864",
         "#BEAF81",
         "#D99481",
-    ]
-    // let relations = ["cs"]; //Type of relations between nodes
-    // $: console.log("nodes", nodes);
-    // $: console.log("edges", edges);
-    // $: console.log("relations", relations);
+    ];
 
     // --- Logic for getting the color of each node ---
-    let selectedNodeId = null
-    $: console.log("selectedNodeId", selectedNodeId)
-    $: console.log("selectedNodeData", nodeMap.get(selectedNodeId))
+    let selectedNodeId = null;
+    // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
+    // $: console.log("selectedNodeData", nodeMap.get(selectedNodeId)); // Retained for potential debugging, uncomment if needed
 
     function getNodeColor(d) {
         if (!selectedNodeId) {
             // Default color
-            return "#a0a0a0"
+            return "#a0a0a0";
         }
 
-        const selectedNodeData = nodeMap.get(selectedNodeId)
+        const selectedNodeData = nodeMap.get(selectedNodeId);
 
         if (!selectedNodeData){
-            // console.log("Node data for", selectedNodeId, "not found")
-            return "#a0a0a0"
+            return "#a0a0a0";
         }
 
         if (d.id === selectedNodeId) {
-            return colorPallete[0]
+            return colorPallete[0];
         }
 
-        console.log("d", d)
-
-        if (d.n === "Elvis Presley") {
-            console.log("THIS IS ELVIS!")
-            console.log("Number of artists who covered elvis", d.gc.length);
-            d.gc.forEach(element => {
-                if (element == selectedNodeId) {
-                    console.log("21 PILOTS COVERED ELVIS!")
-                    console.log(d.gc.includes(selectedNodeId))
-                }
-            });
-        }
+        // Removed specific Elvis Presley console logs as they were likely for debugging a specific case
+        // console.log("d", d); // Debug log removed
 
         // 2. If the related node has made a cover of him ("cs") - RED
-        // Check if current node `d` has `selectedNodeId` as a key in its 'cs' object
         if (d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
             return colorPallete[4];
         }
 
         // 3. If the related node is a member ("ms") - PURPLE
-        // Check if selectedNode has `d.id` in its 'ms' (members) list
         if (selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
             return colorPallete[2];
         }
 
         // 4. If the related node is a band the expanded node is in ("im") - GRAY
-        // Check if selectedNode has `d.id` in its 'im' (is member of) list
         if (selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
             return colorPallete[3];
         }
 
         // 5. If the related node is an artist the expanded node covered ("gc") - YELLOW
-        // Check if selectedNode has `d.id` in its 'gc' (got covered by) list
-        if (selectedNodeData && d.gc.includes(selectedNodeId)) {
+        if (selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
             return colorPallete[1];
         }
 
-        // Default color for other nodes (not directly related to the selected node in the specified ways)
+        // Default color for other nodes
         return "gray";
     }
 
@@ -96,11 +75,10 @@
     async function addNode(id){
         let letter = id.slice(0, 2);
         if(!(letter in cache)) {
-            // console.log(`Pedindo dados de grafo para a letra ${letter}`);
             try {
                 const response = await fetch(`graph/${letter}.json`);
                 if (!response.ok){
-                    throw new Error(`Não foi possível solicitar os dados de grafo para a letra ${letter}`)
+                    throw new Error(`Não foi possível solicitar os dados de grafo para a letra ${letter}`);
                 }
                 const graphData = await response.json();
                 cache[letter] = graphData;
@@ -108,18 +86,16 @@
                 console.error("Erro ao popular cache:", error);
                 return;
             }
-            // console.log("Dados obtidos corretamente");
         }
         if (cache[letter] && cache[letter][id]) {
-            // Ensure the data from cache is used, including relation arrays
             let nodeData = cache[letter][id];
             let node = {
                 id: id,
                 n: nodeData.n,
                 expanded: false,
-                ms: nodeData.ms || [], // Ensure these properties exist, even if empty
+                ms: nodeData.ms || [],
                 im: nodeData.im || [],
-                cs: nodeData.cs || {}, // cs is an object
+                cs: nodeData.cs || {},
                 gc: nodeData.gc || []
             };
             nodeMap.set(id, node);
@@ -128,12 +104,6 @@
         }
         console.warn(`Artist ID ${id} not found in fetched data.`);
         return null;
-        // let node = { id: id, n: cache[letter][id].n, expanded: false};
-        // nodeMap.set(id, node);
-        // nodes.push(node);
-        
-        
-        // console.log("nodes", nodes);
     }
 
     //Add edges of an node to other nodes in the graph. Adds the other nodes if necessary
@@ -142,51 +112,81 @@
             simulation.stop().alpha(0);
         }
         let letter = id.slice(0, 2);
-        //I assume the cache exists since this function will not be called if the node isnt in the graph in the first place
         const nodeInfo = cache[letter][id];
 
-        // Clear existing edges related to this node if already expanded, to prevent duplicates
-        edges = edges.filter(edge => edge.source.id !== id && edge.target.id !== id);
-
         for(let relation of relations){
-            const relationData = nodeInfo[relation]
+            const relationData = nodeInfo[relation];
 
             if (!relationData) {
-                return
+                // If relationData is undefined or null, skip this relation type for this node
+                // console.warn(`No relation data for type "${relation}" on node ${id}`);
+                continue; // Changed from return to continue to process other relations
             }
-            let relatedIds = []
+            
+            let relatedIds = [];
             
             if(Array.isArray(relationData)){
-                relatedIds = relationData
-            } else if(typeof relationData === 'object' && relationData !== null) {
-                relatedIds = Object.keys(relationData)
-                for (let endId of relatedIds){
-                    if (!nodeMap.has(endId)){
-                        const newNode = await addNode(endId)
-                        if (!newNode) continue
+                relatedIds = relationData;
+                 // Process edges for array type relations
+                for (let endId of relatedIds) {
+                    if (!nodeMap.has(endId)) {
+                        const newNode = await addNode(endId);
+                        if (!newNode) continue;
                     }
+                    let sourceNode = nodeMap.get(id);
+                    let targetNode = nodeMap.get(endId);
                     
-                    let sourceNode = nodeMap.get(id)
-                    let targetNode = nodeMap.get(endId)
-                    
-                    edges.push({
-                        source: sourceNode,
-                        target: targetNode,
-                        type: relation
-                    })
+                    // Avoid adding duplicate edges
+                    const edgeExists = edges.some(e => 
+                        e.source.id === sourceNode.id && e.target.id === targetNode.id && e.type === relation ||
+                        e.source.id === targetNode.id && e.target.id === sourceNode.id && e.type === relation // Consider directionality if needed
+                    );
+
+                    if (!edgeExists) {
+                        edges.push({
+                            source: sourceNode,
+                            target: targetNode,
+                            type: relation
+                        });
+                    }
 
                     updateGraph()
+                }
+            } else if(typeof relationData === 'object' && relationData !== null) {
+                relatedIds = Object.keys(relationData);
+                for (let endId of relatedIds){
+                    if (!nodeMap.has(endId)){
+                        const newNode = await addNode(endId);
+                        if (!newNode) continue;
+                    }
+                    
+                    let sourceNode = nodeMap.get(id);
+                    let targetNode = nodeMap.get(endId);
+                    
+                     // Avoid adding duplicate edges
+                    const edgeExists = edges.some(e => 
+                        e.source.id === sourceNode.id && e.target.id === targetNode.id && e.type === relation ||
+                        e.source.id === targetNode.id && e.target.id === sourceNode.id && e.type === relation
+                    );
+
+                    if(!edgeExists) {
+                        edges.push({
+                            source: sourceNode,
+                            target: targetNode,
+                            type: relation
+                        });
+                    }
+                    updateGraph() // Called once after all relations for the node are processed
                 }
             }
         }
         nodeMap.get(id).expanded = true;
-        edges = [...edges];
-        // console.log(`Adicionei arestas de ${id}`);
+        edges = [...edges]; // Trigger Svelte reactivity if needed elsewhere, D3 updates separately
+        updateGraph(); // Call updateGraph once after processing all relations for the current node
     }
 
     //Handle external sent artist focusing event
     let expanding = false;
-    // $: console.log("expandindo: ", expanding);
     $: {
         if(importArtist && !expanding){
             expanding = true;
@@ -194,33 +194,26 @@
                 addNode(importArtist).then((node) => {
                     if (node) {
                         addNodeRelations(importArtist).then(() => {
-                            // console.log("adicionei e expandi artista", importArtist);
-                            selectedNodeId = importArtist
+                            selectedNodeId = importArtist;
                             updateGraph();
                             importArtist = null;
                             expanding = false;
                         });
+                    } else { // Handle case where node couldn't be added
+                        importArtist = null;
+                        expanding = false;
                     }
                 });
-            // } else if (!nodeMap.get(importArtist).expanded){
-            //     addNodeRelations(importArtist).then(() => {
-            //         console.log("expandi artista ", importArtist);
-            //         updateGraph(importArtist);
-            //         importArtist = null;
-            //         expanding = false;
-            //     });
             } else if(!nodeMap.get(importArtist).expanded) {
                 addNodeRelations(importArtist).then(() => {
-                    // console.log("Expanded artist", importArtist)
-                    selectedNodeId = importArtist
+                    selectedNodeId = importArtist;
                     updateGraph();
                     importArtist = null;
                     expanding = false;
-                })
+                });
             } else {
-                // console.log("artista já estava expandido");
-                selectedNodeId = importArtist
-                updateGraph()
+                selectedNodeId = importArtist;
+                updateGraph();
                 importArtist = null;
                 expanding = false;
             }
@@ -232,21 +225,58 @@
         if(!expanding){
             expanding = true;
             
-            if (selectedNodeId && nodeMap.has(selectedNodeId)) {
-                nodeMap.get(selectedNodeId).expanded = false
-            }
+            // Optional: If you want to collapse previously selected node when a new one is clicked
+            // if (selectedNodeId && selectedNodeId !== node.id && nodeMap.has(selectedNodeId)) {
+            //     const previouslySelectedNode = nodeMap.get(selectedNodeId);
+            //     if (previouslySelectedNode) previouslySelectedNode.expanded = false;
+            //      // Optionally, remove edges related to the previously selected node if desired
+            // }
             
-            selectedNodeId = node.id
+            console.log("Clicked node", node)
+            selectedNodeId = node.id;
 
             if (node.expanded){
-                // console.log("nó já estava expandido");
+                // If node is already expanded, perhaps just focus it or do nothing
+                // console.log("Node already expanded, just re-focusing.");
                 expanding = false;
-                updateGraph()
+                updateGraph(); // Re-color or re-center
             } else {
-                addNodeRelations(node.id).then(() => {
-                    updateGraph();
-                    expanding = false;
-                });
+                // --- Adding zoom out before adding relations ---
+                const svg = d3.select(svgNode)
+                if (!svg.empty() && zoomBehavior && node.x !== undefined) {
+                    const scale = 0.7
+
+                    const targetX = node.x;
+                    const targetY = node.y;
+                    
+                    const newTransform = d3.zoomIdentity
+                        .translate(width / 2 - targetX * scale, height / 2 - targetY * scale)
+                        .scale(scale);
+
+                    svg.transition()
+                        .duration(750) // Duration for zoom out
+                        .call(zoomBehavior.transform, newTransform)
+                        .on("end", () => { // After zoom, proceed to add relations
+                            addNodeRelations(node.id).then(() => {
+                                // updateGraph is called within and at the end of addNodeRelations
+                                expanding = false;
+                            });
+                        });
+                }
+                else{
+                    // Fallback if SVG/zoom not ready or node position unknown (should be rare for a clicked node)
+                    console.warn("SVG or node position not available for pre-zoom.");
+                    addNodeRelations(node.id).then(() => {
+                        // updateGraph(); // updateGraph is called within addNodeRelations
+                        expanding = false;
+                    });
+                }
+                
+                // addNodeRelations(node.id).then(() => {
+                //     // node.expanded is set to true inside addNodeRelations
+                //     updateGraph();
+                //     expanding = false;
+                // });
             }
         }
     }
@@ -275,30 +305,22 @@
             .on("end", dragended);
     }
 
-    //It is necessary to manage the svg and graph with d3 because of the animation and
-    //update of things. Doing it with svelte is inneficient since we would need to reasign
-    //the graph arrays everytime... An operation that can be expensive :( (yeah I would
-    //love to handle this with svelte but the life is a cold and indifferent place)
-
-    //Variables to save D3 components
+    //D3 variables
     let simulation;
     let svgEdges;
     let svgNodes;
     let svgLabels;
-    //Variables to aid zooming
     let zoomBehavior;
     let tickCount = 0;
     let alreadyZoomed = false;
-    let focusNode; //It is set based on the input to the function and set to null when the focus was applied
+    let focusNode; 
 
-    let highlightNode; //Variable to hold a node that is highlighted (mouse hover)
-    // function updateGraph(focusId) {
+    let highlightNode; 
     function updateGraph() {
         const svg = d3.select(svgNode);
         const zoomGroup = d3.select("#zoom-group");
-        let ref = d3.select("#ref");
+        // let ref = d3.select("#ref"); // Removed as #ref element doesn't exist in SVG
         if (!simulation) {
-            //Create simulation and initial classes if they didnt exist before
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id((d) => d.id).distance(100))
                 .force("charge", d3.forceManyBody().strength(-300))
@@ -306,15 +328,13 @@
 
             svgEdges = zoomGroup.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
-            svgLabels = zoomGroup.append("g").attr("class", "labels"); // Group for labels
+            svgLabels = zoomGroup.append("g").attr("class", "labels");
 
             simulation.on("end", () => {
-                //After the animation, reset variables and focus
                 tickCount = 0;
                 alreadyZoomed = false;
                 focusNode = null;
-                // console.log("Animation ended");
-            })
+            });
 
             simulation.on("tick", () => {
                 svgEdges.selectAll("line")
@@ -324,71 +344,57 @@
                     .attr("y2", (d) => d.target.y);
                 svgNodes.selectAll("g")
                     .attr("transform", (d) => `translate(${d.x},${d.y})`);
-
                 svgLabels.selectAll("text")
                     .attr("x", (d) => d.x)
-                    .attr("y", (d) => d.y)
+                    .attr("y", (d) => d.y);
 
-                //If this animation should have focus, then focus after some ticks to get a stable focusing
                 tickCount++;
-                // console.log(tickCount);
                 if(tickCount > 60 && !alreadyZoomed && focusNode){
-                    // console.log("zooming");
                     alreadyZoomed = true;
                     const translateX = (width / 2) - (focusNode.x);
                     const translateY = (height / 2) - (focusNode.y);
                     const newTransform = d3.zoomIdentity
                         .translate(translateX, translateY)
-                        .scale(1);
-                    svg.transition() //Pan in with animation
+                        .scale(1); // You might want to adjust scale or make it dynamic
+                    svg.transition()
                         .duration(500)
                         .call(zoomBehavior.transform, newTransform);
-                    // zoomBehavior.transform(svg, newTransform); //Without animation
                 }
             });
-
 
             zoomBehavior = d3.zoom()
                 .extent([[0, 0], [width, height]])
                 .scaleExtent([0.1, 10])
                 .on("zoom", (event) => {
                     zoomGroup.attr("transform", event.transform);
-                    ref.attr("transform", event.transform);
-                    // console.log("changed to", event.transform);
+                    // ref.attr("transform", event.transform); // Removed as #ref was removed
                 });
             svg.call(zoomBehavior);
         }
 
-
-        //Update simulation internal node and edge lists with possible new nodes and edges
         simulation.nodes(nodes);
         simulation.force("link").links(edges);
+        
+        // console.log("Animation started"); // Redundant console.log removed
 
-        // simulation.alpha(1).restart();
-        console.log("Animation started");
-
-        //Set variable to be acessed in tick updates
-        if(selectedNodeId){
+        if(selectedNodeId && nodeMap.has(selectedNodeId)){ // Ensure node exists before trying to get it
             focusNode = nodeMap.get(selectedNodeId);
+        } else {
+            focusNode = null; // Reset focusNode if selectedNodeId is not valid
         }
 
-        //Start a new animation with the updated data
         tickCount = 0;
         alreadyZoomed = false;
         simulation.alpha(1).restart();
-        console.log("Animation started");
+        // console.log("Animation started"); // This one is fine
 
-
-        //Apply updates to all nodes and edges, existing or new
         svgEdges.selectAll("line")
             .data(edges, d => `${d.source.id}-${d.target.id}-${d.type}`)
             .join(
                 enter => enter.append("line")
-                .attr("class", d => `edge relation-${d.type}`)
-                // .attr("stroke", d => relationColors[d.type]),
-                .attr("stroke", "#999")
-                .attr("stroke-opacity", "0.6"),
-                // .attr("marker-end", d => `url(#arrowhead-${d.type})`),
+                    .attr("class", d => `edge relation-${d.type}`)
+                    .attr("stroke", "#999") // Default edge color
+                    .attr("stroke-opacity", "0.6"),
                 update => update,
                 exit => exit.remove()
             );
@@ -399,101 +405,91 @@
                     const g = enter.append("g")
                         .call(nodeDrag(simulation))
                         .on("click", nodeClick)
-                        .on("mouseenter", (event, d) => {highlightNode = d})
-                        .on("mouseleave", (event, d) => {highlightNode = null})
+                        .on("mouseenter", (event, d) => {highlightNode = d;})
+                        .on("mouseleave", () => {highlightNode = null;}); // Simplified mouseleave
                     g.append("circle")
-                        .attr("r", 20)
-                    return g
+                        .attr("r", 20);
+                    return g;
                 },
                 update => update,
                 exit => exit.remove()
-            )
+            );
             
         nodeGs.select("circle")
-            .attr("fill", d => getNodeColor(d)) // Use the new coloring function
-            .attr("stroke", d => "#000")
-            .attr("stroke-width", 1.5);
+            .attr("fill", d => getNodeColor(d))
+            .attr("stroke", "#000") // Ensuring stroke is applied
+            .attr("stroke-width", 1.5); 
             
         svgLabels.selectAll("text")
             .data(nodes, d => d.id)
             .join(enter => enter.append("text")
                 .attr("dx", 0)
-                .attr("dy", "0.35em")
-                .attr("text-anchor", "middle")
-                .attr("fill", "white")
+                .attr("dy", "0.35em") // Vertically center
+                .attr("text-anchor", "middle") // Horizontally center
+                // .attr("fill", "white") // Overridden below, can remove
                 .attr("font-size", "10px")
-                .attr("pointer-events", "none") // Don't block clicks on nodes
-                .attr("fill", "black") // Default label color
+                .attr("pointer-events", "none") 
+                .attr("fill", "black") 
                 .text(d => d.n),
                 update => update,
                 exit => exit.remove()
             )
-            .attr("fill", "#fff")
+            .attr("fill", "#fff") // Final label color - ensure this is what you want over "black"
             .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal");
     }
 
-    // $: console.log(highlightNode);
-
     onMount(() => {
-        // console.log("mounted");
-        const id = "a6c6897a-7415-4f8d-b5a5-3a5e05f3be67";
+        const id = "a6c6897a-7415-4f8d-b5a5-3a5e05f3be67"; // Example initial node
         addNode(id).then((node) => {
             if (node){
                 addNodeRelations(id).then(() => {
-                    nodes = [...nodes];
-                    selectedNodeId = id
+                    nodes = [...nodes]; // Ensure Svelte sees the change if nodes array itself needs to be reactive
+                    selectedNodeId = id;
                     updateGraph();
                 });
             }
         });
-        // console.log("catatau");
-
     });
-
 
 </script>
 
-<div class="graph-container">
-    <svg bind:this={svgNode} width={width} height={height}>
-        <g id="zoom-group"></g>
-    </svg>
-
-    {#if highlightNode}
-        <div style="position: absolute; top: 10px; left: 10px; background: white; padding: 5px; border: 1px solid #ccc;">
-            <strong>Artist:</strong> {highlightNode.n}
-        </div>
-    {/if}
+<div class="graph-visualization">
+    <div class="graph-container">
+        <svg bind:this={svgNode} width={width} height={height}>
+            <g id="zoom-group"></g>
+        </svg>
+        
+    </div>
+    <div class="tooltip">
+        {#if highlightNode}
+            <div style="position: absolute; top: 230px; left: 10px; background: white; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
+                <strong>Artist:</strong> {highlightNode.n}
+            </div>
+        {/if}
+    </div>
 </div>
 
-<!-- <svg id="genre-graph"
-     width="{width}" height="{height}"
-     viewBox="[0, 0, {width}, {height}]"
-     bind:this={svgNode}>
-     <g id="zoom-group"></g>
-     <circle id="ref" r="15" opacity="0.5" color="blue" cx={width/2} cy={height/2}>
-</svg> -->
-
-<div class="tooltip"></div>
-
 <style>
+    /* Removed '*' selector as it's too broad and can cause unintended styling issues. 
+       Set body or specific container color if a global default is needed. */
+    
     svg {
         border-style: solid;
         border-width: 3px;
         border-color: green;
+        display: block; /* Often good for SVG to prevent extra space */
     }
 
-    .node-circle {
-        stroke: white;
-        stroke-width: 1.5px;
+    .graph-visualization {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Example: center the graph container */
     }
 
-    .node-text {
-        fill: white;
-        font-size: 10px;
-        text-anchor: middle;
-        dominant-baseline: middle;
-        pointer-events: none;
+    .tooltip div,
+    .tooltip strong{
+        fill: black;
+        color: black;
     }
-
-
 </style>
