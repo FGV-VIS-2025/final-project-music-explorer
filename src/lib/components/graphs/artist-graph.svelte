@@ -311,17 +311,69 @@
             .on("end", dragended);
     }
 
+    //Checks if a node has an displayed edge with another
+    function isConnectedWith(node_1, node_2){
+        //True if they are the same
+        if(node_1.id == node_2.id){
+            return true;
+        }
+        //If both are unexpanded then no edge can exist between them
+        if (!(node_2.expanded || node_1.expanded)){
+            return false;
+        }
+        //Seeks in all the relations (even unexpanded ones) if they are related. No ghost edge will happen here because of the above condition.
+        for (let relation of relations){
+            if(Array.isArray(node_1[relation])){
+                if(node_1[relation].includes(node_2.id)){
+                    return true;
+                }
+            }
+            else {
+                if(Object.hasOwn(node_1[relation], node_2.id)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    let highlightNode;
+    //I call the function in the reactive block instead of doing directly there to avoid triggering by node or edge variable update
+    $: HandleHighlight(highlightNode);
+
+    function HandleHighlight(node){
+        console.log(node);
+        if(nodeGs && svgEdges){ //Only do when there are cicles and edges in graph
+            if(node){ //Verify the relations of adjacency
+                nodeGs.select("circle")
+                    .attr("stroke", d => {return isConnectedWith(node, d)? "#FFF" : "#000";})
+                    .attr("stroke-width", d => {return isConnectedWith(node, d)? 3 : 1.5});
+                svgEdges.selectAll("line")
+                    .attr("stroke", e => {return (e.target.id == node.id || e.source.id == node.id)? "#FFF" : "#999"})
+                    .attr("stroke-width", e => {return (e.target.id == node.id || e.source.id == node.id)? 3 : 1})
+            } else { //reset to default values
+                nodeGs.select("circle")
+                    .attr("stroke", "#000") // Ensuring stroke is applied
+                    .attr("stroke-width", 1.5);
+                svgEdges.selectAll("line")
+                    .attr("stroke", "#999") // Default edge color
+                    .attr("stroke-width", 1) // Default edge color
+            }
+            console.log("handled highlight change")
+        }
+    }
+
     //D3 variables
     let simulation;
     let svgEdges;
     let svgNodes;
     let svgLabels;
+    let nodeGs;
     let zoomBehavior;
     let tickCount = 0;
     let alreadyZoomed = false;
-    let focusNode; 
+    let focusNode;
 
-    let highlightNode; 
     function updateGraph() {
         const svg = d3.select(svgNode);
         const zoomGroup = d3.select("#zoom-group");
@@ -425,12 +477,13 @@
                 enter => enter.append("line")
                     .attr("class", d => `edge relation-${d.type}`)
                     .attr("stroke", "#999") // Default edge color
-                    .attr("stroke-opacity", "0.6"),
+                    .attr("stroke-opacity", "0.6")
+                    .attr("stroke-width", 1),
                 update => update,
                 exit => exit.remove()
             );
 
-        const nodeGs = svgNodes.selectAll("g")
+        nodeGs = svgNodes.selectAll("g")
             .data(nodes, d => d.id)
             .join(enter => {
                     const g = enter.append("g")
@@ -449,7 +502,7 @@
         nodeGs.select("circle")
             .attr("fill", d => getNodeColor(d))
             .attr("stroke", "#000") // Ensuring stroke is applied
-            .attr("stroke-width", 1.5); 
+            .attr("stroke-width", 1.5);
             
         svgLabels.selectAll("text")
             .data(nodes, d => d.id)
@@ -493,7 +546,7 @@
     </div>
     <div class="tooltip">
         {#if highlightNode}
-            <div style="position: absolute; top: 350px; left: 140px; background: white; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
+            <div style="position: absolute; top: 350px; left: 140px; background: white; color: black; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
                 <strong>Artist:</strong> {highlightNode.n}
             </div>
         {/if}
