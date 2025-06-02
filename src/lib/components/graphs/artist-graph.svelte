@@ -8,6 +8,7 @@
     export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
     export let expandedNodes = []; //Shared resource with other components
     export let expanding; //Shared resource with other components
+    export let selectedNodeId = null; //Shared resource with other components
 
     let svgNode;
 
@@ -38,7 +39,6 @@
     ]
 
     // --- Logic for getting the color of each node ---
-    let selectedNodeId = null;
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
     // $: console.log("selectedNodeData", nodeMap.get(selectedNodeId)); // Retained for potential debugging, uncomment if needed
 
