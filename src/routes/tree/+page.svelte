@@ -141,7 +141,6 @@
 
 <style>
     main {
-        background-color: white;
         display: flex;
         flex-direction: column;
         align-items: center;

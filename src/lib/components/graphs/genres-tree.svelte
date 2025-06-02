@@ -216,7 +216,7 @@
                     ? "orange"
                     : d._children
                       ? "#555"
-                      : "#999",
+                      : "var(--accent-black)",
             )
             .attr("stroke", (d) =>
                 highlightedNames.has(d.data.name)
@@ -372,9 +372,11 @@
             .attr("x", (d) => (d._children ? -8 : 8))
             .attr("text-anchor", (d) => (d._children ? "end" : "start"))
             .text((d) => d.data.name)
+            .attr("fill", "white")
+            .attr("font-size", "12px")
             .attr("stroke-linejoin", "round")
-            .attr("stroke-width", 3)
-            .attr("stroke", "white")
+            .attr("stroke-width", 4)
+            .attr("stroke", "var(--accent-black)")
             .attr("paint-order", "stroke");
 
         const nodeUpdate = node.merge(nodeEnter);
