@@ -104,7 +104,8 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                 if relation["target-type"] == "work" and not ("cover" in relation["attributes"]):
                     work_id = relation["work"]["id"]
                     for artist_meta in track["artist-credit"]:
-                            work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship
+                            work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
+
 
 for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
@@ -123,7 +124,7 @@ for work in tqdm(work_map):
     work_map[work]["a"] = true_authors
 
 for artist in tqdm(artist_map):
-    if artist_map[artist]["c"] == 0: #doenst have authoral music
+    if artist_map[artist]["c"] == 0 and len(artist_map[artist]["im"]) == 0: #doenst have authoral music and isnt member of a band
         artist_map[artist]["r"] = True #mark for remotion
 
 for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
