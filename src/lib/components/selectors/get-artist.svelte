@@ -53,21 +53,41 @@
 	function toggleResultsVisibility() {
 		showResults = !showResults;
 	}
+
+
+    function handleInputFocus() {
+        if (searchResults.length > 0 && successfulSearch) {
+            showResults = true;
+        }
+    }
+
+    function handleInputBlur() {
+        setTimeout(() => {
+            if (!document.activeElement.classList.contains('searchResult') && 
+                !document.activeElement.classList.contains('artistSearchBar') &&
+                !document.activeElement.closest('.artistSearchBar')) {
+             showResults = false;
+            }
+        }, 100);
+    }
+
 </script>
 
 <div class="container">
-	<form on:submit={searchArtists}>
-		<div class="artistSearchBar">
-			<input
-				id="cityInput"
-				type="text"
-				bind:value={userInput}
-				required
-				placeholder="Busque um artista ou banda"
-			/>
-			<button type="submit">Buscar</button>
-		</div>
-	</form>
+    <form on:submit={searchArtists}>
+        <div class="artistSearchBar" class:is-searching={searching}>
+            <input
+                id="cityInput"
+                type="text"
+                bind:value={userInput}
+                required
+                placeholder="Busque um artista ou banda"
+                on:focus={handleInputFocus}
+                on:blur={handleInputBlur}
+            />
+            <button type="submit">Buscar</button>
+        </div>
+    </form>
 
 	{#if interacted === false}
 		<!-- <p>Nenhuma busca foi feita.</p> -->
@@ -114,81 +134,118 @@
 		box-sizing: border-box;
 	}
 
-	.artistSearchBar {
-		display: flex;
-		width: 100%;
-		position: relative;
-		box-shadow: 0px 0px 5px rgba(255, 255, 255, 0.6);
+    .artistSearchBar {
+        display: flex;
+        width: 100%;
+        position: relative;
+        background-color: rgba(100, 100, 100, 0.6);
+        box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6);
+        border-radius: 8px;
+        overflow: hidden;
 
+        padding: 2px;
+    }
 
-		border-radius: 4px;
-	}
+    @property --gradient-angle {
+        syntax: "<angle>";
+        initial-value: 90deg;
+        inherits: false;
+    }
 
-	.artistSearchBar input {
-		flex-grow: 1;
-		padding: 10px;
-		border: none;
-		padding-right: 80px;
-		border-radius: 4px 0 0 4px;
+    @keyframes rotate-gradient {
+        0% {
+            --gradient-angle: 0deg;
+        }
+        100% {
+            --gradient-angle: 360deg;
+        }
+    }
 
-		background-color: var(--accent-black);
-	}
+    .artistSearchBar.is-searching::before {
+        content: "";
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -10px;
+        z-index: 0;
+        border-radius: inherit;
+
+        background: conic-gradient(
+            from var(--gradient-angle),
+			#1f1f1f,
+            #007bff
+        );
+        
+        animation: rotate-gradient 3s linear infinite;
+    }
+
+    .artistSearchBar input {
+        flex-grow: 1;
+        padding: 12px 15px;
+        border: none;
+        border-radius: 6px 0 0 6px;
+        background-color: var(--accent-black);
+        color: white;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
 
 	.artistSearchBar input:focus {
 		outline: #0056b3;
 	}
 
-	.artistSearchBar button[type="submit"] {
-		padding: 0 15px;
-
-		color: white;
-		background-color: #007bff;
-
-		border: none;
-		border-radius: 0 4px 4px 0;
-		
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
+    .artistSearchBar button[type="submit"] {
+        padding: 0 18px;
+        color: white;
+        background-color: #007bff;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+        transition: background-color 0.2s ease;
+    }
 
 	.artistSearchBar button[type="submit"]:hover {
 		background-color: #0056b3;
 	}
 
-	.results {
-		overflow-y: auto;
-		max-height: 200px;
-		
-		padding: 5px;
-		margin-top: 10px;
-		
-		border: 1px solid #eee;
-		border-radius: 4px;
-		
-		background-color: #f9f9f9;
-		
-	}
+    .results {
+        overflow-y: auto;
+        max-height: 250px;
+        padding: 5px;
+        margin-top: 10px;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+    }
 
-	.searchResult {
-		display: block;
-		width: 100%;
-		padding: 10px;
-		text-align: left;
-		border: none;
-		background: none;
-		cursor: pointer;
-		border-bottom: 1px solid #eee;
-		font-size: 1rem;
-		color: black;
-	}
+    .searchResult {
+        display: block;
+        width: 100%;
+        padding: 12px 15px;
+        text-align: left;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+        color: #333;
+        transition: background-color 0.15s ease;
+    }
 
 	.searchResult:last-child {
 		border-bottom: none;
 	}
 
-	.searchResult:hover {
+    .searchResult:hover,
+	.searchResult:focus {
 		background-color: #e9e9e9;
 		border-radius: 4px;
 	}
