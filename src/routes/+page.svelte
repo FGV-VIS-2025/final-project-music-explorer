@@ -30,14 +30,14 @@
              bind:expanding
              bind:selectedNodeId={infoArtist}/>
 {#if displayInfo}
-<div class="floating">
+<div id="artist-info">
     <ArtistInfo artistId={infoArtist}/>
 </div>
 {/if}
 
 
 <style>
-.floating {
+#artist-info {
     position: fixed;
     bottom: 5%;
     right: 5%;
@@ -49,8 +49,8 @@
 
     padding: 10px;
     box-shadow: 0 2px 10px rgba(256, 256, 256, 0.25);
-    width: 90%;
-    max-width: 900px;
+    height: 90%;
+    max-width: 500px;
     box-sizing: border-box;
 }
 </style>

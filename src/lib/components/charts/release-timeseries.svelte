@@ -4,12 +4,12 @@
     export let artistId;
 
     let dims = {
-        width: 540,
-        height: 300,
+        width: 480,
+        height: 270,
         left: 30,
         bottom: 30,
-        right: 30,
-        top: 30,
+        right: 10,
+        top: 10,
     }
 
     let svgNode = null;
@@ -17,7 +17,6 @@
 
     //State variables
     let searching = false;
-    let successfulRequest = false;
     let successfulSearch = false;
 
     let searchResults = [];
@@ -35,7 +34,7 @@
                 return "na";
             }
         });
-        [minDate, maxDate] = d3.extent(dateGroup, d => new Date(`${d[0]}-01`))
+        [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "na" ? new Date(`${d[0]}-01`) : null)
         maxDate = new Date();
 
         let current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
@@ -51,7 +50,6 @@
             current.setMonth(current.getMonth() + 1);
         }
         dateRange = [...dateRange];
-        console.log(dateRange);
     }
 
     function getDate(date){
@@ -74,6 +72,7 @@
                 }
                 let data = await response.json();
                 searchResults = data["release-groups"];
+                console.log("contagem de relrease group:", data["release-group-count"])
                 while (data["release-group-count"] > offset + 25){
                     offset += 25;
                     response = await fetch(`${link}&offset=${offset}`);
@@ -85,13 +84,11 @@
                 }
                 console.log(searchResults);
                 processDates(searchResults);
-                successfulRequest = true;
                 successfulSearch = true;
                 searching = false;
             } catch (error) {
                 console.error("Error while searching for artist work:", error);
                 searchResults = [];
-                successfulRequest = false;
                 successfulSearch = false;
                 searching = false
             }
@@ -117,7 +114,7 @@
     let xScale, yScale;
     let xAxis, yAxis;
     $: {
-        if(dateGroup){
+        if(dateGroup && minDate && maxDate){
             xScale = d3.scaleTime().domain([minDate, maxDate]).range([dims.left, dims.width - dims.right]);
             yScale = d3.scaleLinear().domain(d3.extent(dateRange, d => getDate(d).length)).range([dims.height - dims.bottom, dims.top]);
             d3.select(xAxis).call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y")));
@@ -134,18 +131,23 @@
 
 </script>
 
-<svg bind:this={svgNode} width={dims.width} height={dims.height} viewbox="[0, 0, {dims.width}, {dims.height}]">
-    <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis} />
-    <g transform = "translate({dims.left}, 0)" bind:this={yAxis} />
-    {#if pathDefinition}
-    <path
-        d={pathDefinition}
-        fill="none"
-        stroke="steelblue"
-        stroke-width="1.5"
-        stroke-linejoin="round"
-        stroke-linecap="round"
-    />
-    {/if}
-
-</svg>
+{#if searching}
+    <p>Carregando informações de lançamentos...</p>
+{:else if !successfulSearch}
+    <p>Houve um problema ao carregar as informações de lançamentos do artista.</p>
+{:else if searchResults}
+    <svg bind:this={svgNode} width={dims.width} height={dims.height} viewbox="0 0 {dims.width} {dims.height}">
+        <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis} />
+        <g transform = "translate({dims.left}, 0)" bind:this={yAxis} />
+        {#if pathDefinition}
+            <path
+                d={pathDefinition}
+                fill="none"
+                stroke="steelblue"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+            />
+        {/if}
+    </svg>
+{/if}
