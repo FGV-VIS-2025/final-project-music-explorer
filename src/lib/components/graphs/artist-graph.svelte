@@ -8,9 +8,11 @@
     export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
     export let expandedNodes = []; //Shared resource with other components
     export let expanding; //Shared resource with other components
+
     let svgNode;
 
-    $: console.log(expandedNodes);
+    let resizeObserver;
+    let currentZoomScale = 1;
 
     let cache = {}; //Where to hold raw data fetched by file
     let nodes = []; //Where node objects are saved
@@ -29,9 +31,9 @@
     const legendItems = [
         { color: colorPallete[0], text: "Selected artist/band" },
         { color: colorPallete[1], text: "Covered song from selected artist/band" },
-        { color: colorPallete[2], text: "Member of selected band" }, 
+        { color: colorPallete[2], text: "Member of selected band" },
         { color: colorPallete[3], text: "Band selected artist is Member Of" },
-        { color: colorPallete[4], text: "Artist/band Covered by selected artist/band" }, 
+        { color: colorPallete[4], text: "Artist/band Covered by selected artist/band" },
         { color: "#a0a0a0", text: "Not directly related to the selected artist/band" },
     ]
 
@@ -444,6 +446,10 @@
     let alreadyZoomed = false;
     let focusNode;
 
+    // Constante para o limite de zoom para mostrar o texto
+    const TEXT_ZOOM_THRESHOLD = 0.6;
+    const BASE_FONT_SIZE = 11; // Em pixels
+
     function updateGraph() {
         const svg = d3.select(svgNode);
         const zoomGroup = d3.select("#zoom-group");
@@ -498,9 +504,11 @@
                     .attr("y2", (d) => d.target.y);
                 svgNodes.selectAll("g")
                     .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
                 svgLabels.selectAll("text")
                     .attr("x", (d) => d.x)
-                    .attr("y", (d) => d.y);
+                    .attr("y", (d) => d.y)
+
 
                 tickCount++;
                 if(tickCount > 60 && !alreadyZoomed && focusNode){
@@ -521,9 +529,34 @@
                 .scaleExtent([0.1, 10])
                 .on("zoom", (event) => {
                     zoomGroup.attr("transform", event.transform);
+                    currentZoomScale = event.transform.k; // Armazena o nível de zoom
+
+                    svgLabels.selectAll("text")
+                        .attr("opacity", d => {
+                            if (d.expanded) {
+                                return 1;
+                            }
+                            if (currentZoomScale > TEXT_ZOOM_THRESHOLD) {
+                                return 1;
+                            }
+                            return 0;
+                        })
+                        .attr("font-size", d => {
+                            if (d.expanded) {
+                                const effectiveScale = Math.max(0.1, currentZoomScale);
+                                return `${Math.max(BASE_FONT_SIZE,BASE_FONT_SIZE / effectiveScale**1.1)}px`;
+                            }
+                            return  `${BASE_FONT_SIZE}px`;
+                        });
                     // ref.attr("transform", event.transform); // Removed as #ref was removed
                 });
             svg.call(zoomBehavior);
+        } else {
+            // Se a simulação já existe, apenas atualize as forças de centro com as novas dimensões
+            simulation.force("x", d3.forceX(width / 2))
+                      .force("y", d3.forceY(height / 2));
+            zoomBehavior.extent([[0, 0], [width, height]]); // Atualiza a extensão do zoom
+            d3.select(svgNode).call(zoomBehavior); // Re-aplica o comportamento de zoom no SVG
         }
 
         simulation.nodes(nodes);
@@ -581,24 +614,41 @@
                 .attr("dx", 0)
                 .attr("dy", "0.35em") // Vertically center
                 .attr("text-anchor", "middle") // Horizontally center
-                // .attr("fill", "white") // Overridden below, can remove
                 .attr("font-size", "10px")
-                .attr("pointer-events", "none") 
-                .attr("fill", "black") 
+                .attr("pointer-events", "none")
+                .attr("fill", "#fff") // Final label color
+                .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal")
+                .attr("opacity", d => { // Define a opacidade inicial
+                    if (d.expanded) {
+                        return 1;
+                    }
+                    if (currentZoomScale > TEXT_ZOOM_THRESHOLD) {
+                        return 1;
+                    }
+                    return 0;
+                })
                 .text(d => d.n),
-                update => update,
+                update => update
+                    .attr("opacity", d => { // Atualiza a opacidade no update
+                        if (d.expanded) {
+                            return 1;
+                        }
+                        if (currentZoomScale > TEXT_ZOOM_THRESHOLD) {
+                            return 1;
+                        }
+                        return 0;
+                    })
+                    .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal"), // Garante que o negrito é aplicado no update
                 exit => exit.remove()
-            )
-            .attr("fill", "#fff") // Final label color - ensure this is what you want over "black"
-            .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal");
+            );
     }
 
-   let resizeObserver;
    onMount(() => {
         resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 width = entry.contentRect.width;
                 height = entry.contentRect.height;
+                updateGraph();
             }
         });
 
@@ -631,7 +681,6 @@
         <svg bind:this={svgNode} width={width} height={height}>
             <g id="zoom-group"></g>
         </svg>
-        
     </div>
     <div class="tooltip">
         {#if highlightNode}
@@ -647,9 +696,6 @@
        Set body or specific container color if a global default is needed. */
     
     svg {
-        border-style: solid;
-        border-width: 3px;
-        border-color: green;
         display: block; /* Often good for SVG to prevent extra space */
         width: 99vw;
         height: 99vh;
