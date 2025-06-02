@@ -249,6 +249,7 @@
             } else {
                 // --- Adding zoom out before adding relations ---
                 const svg = d3.select(svgNode)
+
                 if (!svg.empty() && zoomBehavior && node.x !== undefined) {
                     const scale = 0.7
 
@@ -381,7 +382,7 @@
         if (!simulation) {
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id((d) => d.id).distance(100))
-                .force("charge", d3.forceManyBody().strength(-300))
+                .force("charge", d3.forceManyBody().strength(-500))
                 .force("x", d3.forceX())
                 .force("y", d3.forceY());
 
@@ -523,7 +524,19 @@
             .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal");
     }
 
-    onMount(() => {
+   let resizeObserver;
+   onMount(() => {
+        resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                width = entry.contentRect.width;
+                height = entry.contentRect.height;
+            }
+        });
+
+        if (svgNode) {
+            resizeObserver.observe(svgNode);
+        }
+
         const id = "a6c6897a-7415-4f8d-b5a5-3a5e05f3be67"; // Example initial node
         addNode(id).then((node) => {
             if (node){
@@ -534,6 +547,12 @@
                 });
             }
         });
+
+        return () => {
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+        };
     });
 
 </script>
@@ -561,13 +580,15 @@
     svg {
         border-style: solid;
         border-width: 3px;
-        max-height: 95vh;
         border-color: green;
         display: block; /* Often good for SVG to prevent extra space */
+        width: 99vw;
+        height: 99vh;
     }
 
     .graph-visualization {
         width: 100%;
+        height: 100%;
         display: flex;
         flex-direction: column;
         align-items: center; /* Example: center the graph container */
