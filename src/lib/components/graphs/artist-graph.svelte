@@ -382,7 +382,8 @@
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id((d) => d.id).distance(100))
                 .force("charge", d3.forceManyBody().strength(-300))
-                .force("center", d3.forceCenter(0, 0));
+                .force("x", d3.forceX())
+                .force("y", d3.forceY());
 
             svgEdges = zoomGroup.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
