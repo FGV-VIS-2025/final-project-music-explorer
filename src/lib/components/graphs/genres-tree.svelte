@@ -16,7 +16,7 @@
     let svgContainer;
     let originalDataRoot;
 
-    let root; // The current root of the tree
+    let root;
     let treeLayout;
     let diagonal;
     let svg;
@@ -25,6 +25,10 @@
 
     let currentData;
     let previousHighlightedNames = new Set();
+
+    const hoverPathColor = "steelblue";
+    const hoverPathStrokeWidth = 2.5;
+    const hoverNodeRadius = 6;
 
     function isEmptyData(obj) {
         return !obj || Object.keys(obj).length === 0;
@@ -38,16 +42,15 @@
         }
     } else if (isEmptyData(data) && (root || originalDataRoot)) {
         clearChart();
-        currentData = null; 
+        currentData = null;
     }
 
-    // Reactive statement for highlightedNames changes
     $: if (highlightedNames !== previousHighlightedNames) {
         console.log(
             "HighlightedNames changed. Re-determining root and managing expansion.",
-            Array.from(highlightedNames)
+            Array.from(highlightedNames),
         );
-        if (originalDataRoot) { 
+        if (originalDataRoot) {
             setDisplayRootAndRender(false);
         }
         previousHighlightedNames = new Set(highlightedNames);
@@ -58,7 +61,7 @@
         svg = d3
             .select(svgContainer)
             .attr("width", width)
-            .attr("height", 100) 
+            .attr("height", 100)
             .attr("viewBox", [-marginLeft, -marginTop, width, 100])
             .attr(
                 "style",
@@ -95,7 +98,7 @@
             ]);
         }
         root = null;
-        originalDataRoot = null; 
+        originalDataRoot = null;
         console.log("Chart cleared.");
     }
 
@@ -108,70 +111,77 @@
         }
 
         originalDataRoot = d3.hierarchy(data);
-        const dx = 20; 
-        // Calculate dy based on the full tree's height for consistent depth spacing
-        const consistentDy = (width - marginRight - marginLeft) / (1 + originalDataRoot.height);
+        const dx = 20;
+
+        const consistentDy =
+            (width - marginRight - marginLeft) / (1 + originalDataRoot.height);
 
         treeLayout = d3.tree().nodeSize([dx, consistentDy]);
         diagonal = d3
             .linkHorizontal()
-            .x((d) => d.y) 
-            .y((d) => d.x); 
+            .x((d) => d.y)
+            .y((d) => d.x);
 
-        // Set initial animation position for the absolute root of the entire dataset
-        // d.x is vertical, d.y is horizontal in this layout.
-        // dx is vertical separation/node height.
-        originalDataRoot.x0 = dx / 2; // Start root node's vertical animation point (center of its own height)
-        originalDataRoot.y0 = 0;    // Horizontal animation point (root is at the left)
+        originalDataRoot.x0 = dx / 2;
+        originalDataRoot.y0 = 0;
 
         originalDataRoot.descendants().forEach((d, index) => {
-            d.id = `node-${index}`; 
-            d._children = d.children; 
+            d.id = `node-${index}`;
+            d._children = d.children;
         });
-        
+
         previousHighlightedNames = new Set(highlightedNames);
-        setDisplayRootAndRender(true); 
+        setDisplayRootAndRender(true);
     }
 
     function setDisplayRootAndRender(isInitialCall = false) {
         if (!originalDataRoot) {
-            console.warn("setDisplayRootAndRender: originalDataRoot is not available.");
-            if (!isEmptyData(data)) { 
-                console.warn("Attempting to re-initialize chart due to missing originalDataRoot.");
-                initializeChart(); 
+            console.warn(
+                "setDisplayRootAndRender: originalDataRoot is not available.",
+            );
+            if (!isEmptyData(data)) {
+                console.warn(
+                    "Attempting to re-initialize chart due to missing originalDataRoot.",
+                );
+                initializeChart();
             } else {
                 clearChart();
             }
             return;
         }
 
-        let newDisplayRoot = originalDataRoot; 
+        let newDisplayRoot = originalDataRoot;
 
         if (highlightedNames && highlightedNames.size >= 2) {
             const namesArray = Array.from(highlightedNames);
-            const targetName = namesArray[1]; 
-            const targetNode = originalDataRoot.descendants().find(d => d.data.name === targetName);
+            const targetName = namesArray[1];
+            const targetNode = originalDataRoot
+                .descendants()
+                .find((d) => d.data.name === targetName);
 
             if (targetNode) {
                 newDisplayRoot = targetNode;
                 console.log(`Display root set to: "${targetName}"`);
             } else {
-                console.warn(`Node "${targetName}" not found for new root. Using original root.`);
+                console.warn(
+                    `Node "${targetName}" not found for new root. Using original root.`,
+                );
             }
         } else {
-            console.log("Display root set to original data root (highlightedNames < 2 or not set).");
+            console.log(
+                "Display root set to original data root (highlightedNames < 2 or not set).",
+            );
         }
-        
-        root = newDisplayRoot; 
+
+        root = newDisplayRoot;
         manageExpansionAndStyles(isInitialCall);
     }
-
 
     function applyExpansionLogic() {
         if (!root) return;
         const searchActive = highlightedNames && highlightedNames.size > 0;
 
-        root.each((d) => { 
+        root.each((d) => {
             if (searchActive) {
                 if (highlightedNames.has(d.data.name)) {
                     if (d._children && !d.children) {
@@ -179,10 +189,10 @@
                     }
                 }
             } else {
-                if (d.depth > 0) { 
-                    if (d.children) d.children = null; 
-                } else if (d.depth === 0 && d._children && !d.children) { 
-                    d.children = d._children; 
+                if (d.depth > 0) {
+                    if (d.children) d.children = null;
+                } else if (d.depth === 0 && d._children && !d.children) {
+                    d.children = d._children;
                 }
             }
         });
@@ -194,20 +204,112 @@
             return;
         }
         applyExpansionLogic();
-        update(null, root, null);
+        update(null, root, isInitialCall ? 0 : undefined);
     }
 
-    function update(event, source, durationOverride) { 
+    function setNodeAppearance(selection) {
+        selection
+            .select("circle")
+            .attr("r", 4.5)
+            .attr("fill", (d) =>
+                highlightedNames.has(d.data.name)
+                    ? "orange"
+                    : d._children
+                      ? "#555"
+                      : "#999",
+            )
+            .attr("stroke", (d) =>
+                highlightedNames.has(d.data.name)
+                    ? "darkred"
+                    : d._children
+                      ? "#555"
+                      : "#999",
+            );
+
+        selection
+            .select("text")
+            .attr("font-weight", (d) =>
+                highlightedNames.has(d.data.name) ? "bold" : "normal",
+            );
+    }
+
+    function setLinkAppearance(selection) {
+        selection
+            .attr("stroke", (d_link) =>
+                highlightedNames.has(d_link.source.data.name) &&
+                highlightedNames.has(d_link.target.data.name)
+                    ? "orange"
+                    : "#555",
+            )
+            .attr("stroke-opacity", (d_link) =>
+                highlightedNames.has(d_link.source.data.name) &&
+                highlightedNames.has(d_link.target.data.name)
+                    ? 1
+                    : 0.4,
+            )
+            .attr("stroke-width", (d_link) =>
+                highlightedNames.has(d_link.source.data.name) &&
+                highlightedNames.has(d_link.target.data.name)
+                    ? 2.5
+                    : 1.5,
+            );
+    }
+
+    function handleMouseOverPath(event, hoveredNode) {
+        if (!root || !hoveredNode) return;
+
+        const pathNodes = [];
+        let current = hoveredNode;
+        while (current) {
+            pathNodes.unshift(current);
+            if (current === root) break;
+            current = current.parent;
+        }
+        // if (!current && hoveredNode !== root) return;
+
+        const pathNodeIds = new Set(pathNodes.map((n) => n.id));
+
+        gNode.selectAll("g.node").each(function (d_node) {
+            const nodeSelection = d3.select(this);
+            if (pathNodeIds.has(d_node.id)) {
+                nodeSelection
+                    .select("circle")
+                    .attr("fill", hoverPathColor)
+                    .attr("stroke", d3.color(hoverPathColor).darker(0.7))
+                    .attr("r", hoverNodeRadius);
+                nodeSelection.select("text").attr("font-weight", "bold");
+            }
+        });
+
+        gLink
+            .selectAll("path")
+            .filter(
+                (d_link) =>
+                    pathNodeIds.has(d_link.source.id) &&
+                    pathNodeIds.has(d_link.target.id),
+            )
+            .attr("stroke", hoverPathColor)
+            .attr("stroke-width", hoverPathStrokeWidth)
+            .attr("stroke-opacity", 1);
+    }
+
+    function handleMouseOutPath() {
+        if (gNode) gNode.selectAll("g.node").call(setNodeAppearance);
+        if (gLink) gLink.selectAll("path").call(setLinkAppearance);
+    }
+
+    function update(event, source, durationOverride) {
         console.log(
             "update initiated. Source node:",
             source.data ? source.data.name : "N/A (root)",
-            "Current display root:", root.data ? root.data.name : "N/A",
+            "Current display root:",
+            root.data ? root.data.name : "N/A",
         );
 
         const duration =
             durationOverride !== undefined
                 ? durationOverride
-                : event?.altKey 
+                : event?.altKey
                   ? 2500
                   : 250;
 
@@ -215,7 +317,7 @@
 
         let left = root;
         let right = root;
-        root.eachBefore((node) => { 
+        root.eachBefore((node) => {
             if (node.x < left.x) left = node;
             if (node.x > right.x) right = node;
         });
@@ -236,46 +338,41 @@
         let nodes = root.descendants().reverse();
         let links = root.links();
 
-        if (root.data && root.data.name === "") { 
-            nodes = nodes.filter(node => node !== root);
+        if (root.data && root.data.name === "") {
+            nodes = nodes.filter((node) => node !== root);
         }
 
-        if (root.data && root.data.name === "") { 
-            links = links.filter(link => link.source !== root);
+        if (root.data && root.data.name === "") {
+            links = links.filter((link) => link.source !== root);
         }
 
-        const node = gNode
-            .selectAll("g.node")
-            .data(nodes, (d) => d.id); 
+        const node = gNode.selectAll("g.node").data(nodes, (d) => d.id);
 
         const nodeEnter = node
             .enter()
             .append("g")
             .attr("class", "node")
-            .attr("transform", (d) => `translate(${source.y0},${source.x0})`) 
+            .attr("transform", (d) => `translate(${source.y0},${source.x0})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0)
             .on("click", (event, d) => {
-                if (d.children) { 
+                if (d.children) {
                     d.children = null;
-                } else if (d._children) { 
+                } else if (d._children) {
                     d.children = d._children;
                 }
-                update(event, d); 
+                update(event, d);
             });
 
-        nodeEnter
-            .append("circle")
-            .attr("r", 4.5)
-            .attr("stroke-width", 1.5);
+        nodeEnter.append("circle").attr("stroke-width", 1.5);
 
         nodeEnter
             .append("text")
             .attr("dy", "0.31em")
-            .attr("x", (d) => (d._children ? -8 : 8)) 
+            .attr("x", (d) => (d._children ? -8 : 8))
             .attr("text-anchor", (d) => (d._children ? "end" : "start"))
             .text((d) => d.data.name)
-            .attr("stroke-linejoin", "round") 
+            .attr("stroke-linejoin", "round")
             .attr("stroke-width", 3)
             .attr("stroke", "white")
             .attr("paint-order", "stroke");
@@ -283,39 +380,23 @@
         const nodeUpdate = node.merge(nodeEnter);
 
         nodeUpdate
-            .transition(transition) 
-            .attr("transform", (d) => `translate(${d.y},${d.x})`) 
+            .transition(transition)
+            .attr("transform", (d) => `translate(${d.y},${d.x})`)
             .attr("fill-opacity", 1)
             .attr("stroke-opacity", 1);
 
+        nodeUpdate.call(setNodeAppearance);
+
         nodeUpdate
-            .select("circle")
-            .attr("fill", (d) =>
-                highlightedNames.has(d.data.name)
-                    ? "orange"
-                    : d._children 
-                      ? "#555" 
-                      : "#999", 
+            .on("mouseover.path", (event, d_node) =>
+                handleMouseOverPath(event, d_node),
             )
-            .attr("stroke", (d) => 
-                highlightedNames.has(d.data.name)
-                    ? "darkred"
-                    : d._children
-                      ? "#555"
-                      : "#999",
-            ); 
+            .on("mouseout.path", handleMouseOutPath);
 
-        nodeUpdate
-            .select("text")
-            .attr("font-weight", (d) =>
-                highlightedNames.has(d.data.name) ? "bold" : "normal",
-            );
-
-        node
-            .exit()
+        node.exit()
             .transition(transition)
             .remove()
-            .attr("transform", (d) => `translate(${source.y},${source.x})`) 
+            .attr("transform", (d) => `translate(${source.y},${source.x})`)
             .attr("fill-opacity", 0)
             .attr("stroke-opacity", 0);
 
@@ -324,38 +405,28 @@
         const linkEnter = link
             .enter()
             .append("path")
-            .attr("d", (d_link) => { 
-                const o = { x: source.x0, y: source.y0 }; 
+            .attr("d", (d_link) => {
+                const o = { x: source.x0, y: source.y0 };
                 return diagonal({ source: o, target: o });
             });
 
-        link.merge(linkEnter)
-            .transition(transition)
-            .attr("d", diagonal) 
-            .attr("stroke", (d_link) =>
-                highlightedNames.has(d_link.source.data.name) &&
-                highlightedNames.has(d_link.target.data.name)
-                    ? "orange"
-                    : "#555",
+        const linkUpdate = link.merge(linkEnter);
+
+        linkUpdate.transition(transition).attr("d", diagonal);
+
+        linkUpdate.call(setLinkAppearance);
+
+        linkUpdate
+            .on("mouseover.path", (event, d_link) =>
+                handleMouseOverPath(event, d_link.target),
             )
-            .attr("stroke-opacity", (d_link) =>
-                highlightedNames.has(d_link.source.data.name) &&
-                highlightedNames.has(d_link.target.data.name)
-                    ? 1
-                    : 0.4,
-            )
-            .attr("stroke-width", (d_link) =>
-                highlightedNames.has(d_link.source.data.name) &&
-                highlightedNames.has(d_link.target.data.name)
-                    ? 2.5
-                    : 1.5,
-            );
+            .on("mouseout.path", handleMouseOutPath);
 
         link.exit()
             .transition(transition)
             .remove()
             .attr("d", (d_link) => {
-                const o = { x: source.x, y: source.y }; 
+                const o = { x: source.x, y: source.y };
                 return diagonal({ source: o, target: o });
             });
 
