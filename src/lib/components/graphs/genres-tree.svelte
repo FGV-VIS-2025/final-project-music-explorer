@@ -194,7 +194,7 @@
             return;
         }
         applyExpansionLogic();
-        update(null, root, isInitialCall ? 0 : event?.altKey ? 2500 : 250);
+        update(null, root, null);
     }
 
     function update(event, source, durationOverride) { 
@@ -233,8 +233,16 @@
                 Math.max(height, 100),
             ]);
 
-        const nodes = root.descendants().reverse(); 
-        const links = root.links();
+        let nodes = root.descendants().reverse();
+        let links = root.links();
+
+        if (root.data && root.data.name === "") { 
+            nodes = nodes.filter(node => node !== root);
+        }
+
+        if (root.data && root.data.name === "") { 
+            links = links.filter(link => link.source !== root);
+        }
 
         const node = gNode
             .selectAll("g.node")
