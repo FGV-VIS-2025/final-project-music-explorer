@@ -1,6 +1,7 @@
 <script>
 	//Output of the component - an id of a selected artist
 	export let artistId;
+	//Shared resource - lock when graph is expanding
 
 	//To get what the user typed
 	let userInput;
@@ -25,6 +26,7 @@
 			.then((data) => {
 				searching = false;
 				successfulRequest = true;
+				console.log(data);
 				if (data.artists.length > 0) {
 					console.log(data);
 					successfulSearch = true;
@@ -86,6 +88,9 @@
 					on:click={(evt) => onResultClick(evt, index, result.name)}
 				>
 					{result.name}
+					{#if result.disambiguation}
+						<span class="disambiguation">({result.disambiguation})</span>
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -205,5 +210,10 @@
 
 	.toggle-button:hover {
 		background-color: #5a6268;
+	}
+
+	.disambiguation {
+		font-size: 80%;
+		color: gray;
 	}
 </style>

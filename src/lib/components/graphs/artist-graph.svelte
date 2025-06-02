@@ -292,6 +292,7 @@
     //Handle external set artist remove event
     $: {
         if(removeArtist && !expanding){
+            expanding = true;
             RemoveNodeRelations(removeArtist);
             removeArtist = null;
             expanding = false;

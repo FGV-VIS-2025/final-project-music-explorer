@@ -10,12 +10,19 @@
 <div class="container">
     Artistas atualmente expandidos
     <div id="artist-container">
-    {#each expandedNodes as node}
-        <div>
+    {#each expandedNodes as node, index}
+        <div class:hid={index > 4}>
             {node.n}
-            <button on:click={e => {removeNode = node.id}}>x</button>
+            <button on:click={e => {
+                if(!expanding){
+                    removeNode = node.id
+                }
+            }}>x</button>
         </div>
     {/each}
+    {#if expandedNodes.length > 5}
+        <div class="reticences">...</div>
+    {/if}
     </div>
     {#if expanding}
         <p>expandindo agora hein</p>
@@ -56,6 +63,24 @@
         margin: 0.5ch;
         padding: 3px;
         font-size: 85%;
+    }
+
+    button {
+        cursor: pointer;
+        border: 0px;
+        padding: 2px;
+        margin: auto;
+    }
+
+    .hid {
+        display: none;
+    }
+
+    #artist-container:hover .hid {
+        display: block;
+    }
+    #artist-container:hover .reticences {
+        display: none;
     }
 
 </style>
