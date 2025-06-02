@@ -5,9 +5,12 @@
     export let width = 1280;
     export let height = 720;
     export let importArtist = null; //Input of the component, it will receive an id, focus on it and them set it to null
+    export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
+    export let expandedNodes = []; //Shared resource with other components
+    export let expanding; //Shared resource with other components
     let svgNode;
 
-    // let searchInput = ""; // Removed: Unused variable
+    $: console.log(expandedNodes);
 
     let cache = {}; //Where to hold raw data fetched by file
     let nodes = []; //Where node objects are saved
@@ -102,7 +105,8 @@
                 ms: nodeData.ms || [],
                 im: nodeData.im || [],
                 cs: nodeData.cs || {},
-                gc: nodeData.gc || []
+                gc: nodeData.gc || [],
+                linkCount: 0
             };
             nodeMap.set(id, node);
             nodes.push(node);
@@ -154,6 +158,8 @@
                             target: targetNode,
                             type: relation
                         });
+                        sourceNode.linkCount += 1;
+                        targetNode.linkCount += 1;
                     }
 
                     updateGraph()
@@ -181,18 +187,73 @@
                             target: targetNode,
                             type: relation
                         });
+                        sourceNode.linkCount += 1;
+                        targetNode.linkCount += 1;
                     }
                     updateGraph() // Called once after all relations for the node are processed
                 }
             }
         }
         nodeMap.get(id).expanded = true;
-        edges = [...edges]; // Trigger Svelte reactivity if needed elsewhere, D3 updates separately
+        expandedNodes = [...expandedNodes, nodeMap.get(id)];
+        edges = [...edges];
         updateGraph(); // Call updateGraph once after processing all relations for the current node
     }
 
+    //Remove edges from an expanded node, also removing any orphan node
+    //As addNodeRelations, this needs to be protected with the expanding variable!
+    function RemoveNodeRelations(id){
+        if(simulation){
+            simulation.stop().alpha(0);
+        }
+        if(!nodeMap.has(id) || !nodeMap.get(id).expanded){
+            console.warn(`Tried to unexpand node ${id} but it wasnt expanded`);
+        }
+        let node = nodeMap.get(id); //Ensured that exists
+
+        for(let i = edges.length - 1; i >= 0; --i) { //Old fashioned way of looping because elements are being removed
+            let edge = edges[i];
+            let other = null;
+            if(edge.source.id == id){
+                other = edge.target;
+            } else if(edge.target.id == id){
+                other = edge.source;
+            }
+            if(other && !other.expanded){
+                edges.splice(i, 1);
+                node.linkCount -= 1;
+                other.linkCount -= 1;
+                if (other.linkCount == 0){
+                    nodeMap.delete(other.id);
+                    const arrayIndex = nodes.indexOf(other);
+                    if (arrayIndex > -1) {
+                        nodes.splice(arrayIndex, 1);
+                    }
+                }
+                if (node.linkCount == 0){
+                    nodeMap.delete(node.id);
+                    const arrayIndex = nodes.indexOf(node);
+                    if (arrayIndex > -1) {
+                        nodes.splice(arrayIndex, 1);
+                    }
+                    break; //No more edges will point to it
+                }
+                updateGraph();
+            }
+        }
+        if(node.linkCount != 0){
+            node.expanded = false;
+        }
+        const arrayIndex = expandedNodes.indexOf(node);
+            if (arrayIndex > -1) {
+                expandedNodes.splice(arrayIndex, 1);
+            }
+        expandedNodes = [...expandedNodes];
+        edges = [...edges];
+        updateGraph();
+    }
+
     //Handle external sent artist focusing event
-    let expanding = false;
     $: {
         if(importArtist && !expanding){
             expanding = true;
@@ -226,6 +287,15 @@
         }
     }
 
+    //Handle external set artist remove event
+    $: {
+        if(removeArtist && !expanding){
+            RemoveNodeRelations(removeArtist);
+            removeArtist = null;
+            expanding = false;
+        }
+    }
+
     //Handle artist click event
     function nodeClick(event, node){
         if(!expanding){
@@ -237,7 +307,7 @@
             //     if (previouslySelectedNode) previouslySelectedNode.expanded = false;
             //      // Optionally, remove edges related to the previously selected node if desired
             // }
-            
+
             console.log("Clicked node", node)
             selectedNodeId = node.id;
 
@@ -343,7 +413,6 @@
     $: HandleHighlight(highlightNode);
 
     function HandleHighlight(node){
-        console.log(node);
         if(nodeGs && svgEdges){ //Only do when there are cicles and edges in graph
             if(node){ //Verify the relations of adjacency
                 nodeGs.select("circle")
