@@ -127,8 +127,8 @@
     {/if}
     <h4>Histórico de lançamentos (álbuns, EPs e Singles)</h4>
     <ReleaseTimeseries bind:artistId={artist.id}/>
-    {#if pieData}
-        <h4>Proporção dos tipos de relação do artista</h4>
-        <PieChart data={pieData}/>
-    {/if}
+{/if}
+{#if pieData}
+    <h4>Proporção dos tipos de relação do artista</h4>
+    <PieChart data={pieData}/>
 {/if}
