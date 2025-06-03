@@ -29,14 +29,31 @@
         "#D99481",
     ];
 
-    const legendItems = [
-        { color: colorPallete[0], text: "Selected artist/band" },
-        { color: colorPallete[1], text: "Covered song from selected artist/band" },
-        { color: colorPallete[2], text: "Member of selected band" },
-        { color: colorPallete[3], text: "Band selected artist is Member Of" },
-        { color: colorPallete[4], text: "Artist/band Covered by selected artist/band" },
-        { color: "#a0a0a0", text: "Not directly related to the selected artist/band" },
-    ]
+    const legendItemDetails = [
+        { key: "selected", text: "Selected artist/band", color: colorPallete[0], clickable: false},
+        { key: "cs", text: "Covered song from selected artist/band🖱️", color: colorPallete[1], clickable: true},
+        { key: "ms", text: "Member of selected band🖱️", color: colorPallete[2], clickable: true},
+        { key: "im", text: "Band selected artist is Member Of🖱️", color: colorPallete[3], clickable: true},
+        { key: "gc", text: "Artist/band Covered by selected artist/band🖱️", color: colorPallete[4], clickable: true},
+        { key: "default", text: "Not directly related to the selected artist/band", color: "#a0a0a0", clickable: false},
+    ];
+
+    let activeLegendItems = {};
+    legendItemDetails.forEach(item => {
+        activeLegendItems[item.key] = true;
+    });
+    
+    let clickableLegendItems = {};
+    legendItemDetails.forEach(item => {
+        clickableLegendItems[item.key] = item.clickable;
+    });
+
+    let legendDisplayItems = []
+    legendDisplayItems = legendItemDetails.map(item => ({
+        ...item,
+        active: activeLegendItems[item.key], // Get current active state
+        clickable: clickableLegendItems[item.key] // Get current active state
+    }));
 
     // --- Logic for getting the color of each node ---
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
@@ -58,28 +75,29 @@
             return colorPallete[0];
         }
 
-        // 2. If the related node has made a cover of him ("cs") - RED
+        // 2. If the related node has made a cover of him ("cs")
         if (d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
             return colorPallete[1];
         }
 
-        // 3. If the related node is a member ("ms") - PURPLE
+        // 3. If the related node is a member ("ms")
         if (selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
             return colorPallete[2];
         }
 
-        // 4. If the related node is a band the expanded node is in ("im") - GRAY
+        // 4. If the related node is a band the expanded node is in ("im")
         if (selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
             return colorPallete[3];
         }
 
-        // 5. If the related node is an artist the expanded node covered ("gc") - YELLOW
+        // 5. If the related node is an artist the expanded node covered ("gc")
         if (selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
             return colorPallete[4];
         }
 
         // Default color for other nodes
-        return "gray";
+        // return "gray";
+        return activeLegendItems["default"] !== false ? "#a0a0a0" : "rgba(0,0,0,0)"; // Grey or transparent
     }
 
     //Gets a id and add a node object to the nodes array
@@ -127,7 +145,19 @@
         const nodeInfo = cache[letter][id];
 
         for(let relation of relations){
-            const relationData = nodeInfo[relation];
+            if (!activeLegendItems[relation]) {
+                continue
+            }
+            
+            // Determine the actual data key on the node object
+            let dataAccessKey = relation;
+            if (relation === "cs") { // Legend "cs": artists who covered selected node
+                dataAccessKey = "gc"; // Data is in selected node's 'gc' property (array)
+            } else if (relation === "gc") { // Legend "gc": artists selected node covered
+                dataAccessKey = "cs"; // Data is in selected node's 'cs' property (object)
+            }
+
+            const relationData = nodeInfo[dataAccessKey];
 
             if (!relationData) {
                 // If relationData is undefined or null, skip this relation type for this node
@@ -435,8 +465,145 @@
                     .attr("stroke", "#999") // Default edge color
                     .attr("stroke-width", 1) // Default edge color
             }
-            console.log("handled highlight change")
+            // console.log("handled highlight change")
         }
+    }
+
+    async function toggleLegendItem(itemKey) {
+        const visualOnlyLegendKeys = ['selected', 'default']
+
+        if (visualOnlyLegendKeys.includes(itemKey)) {
+            return;
+        }
+
+        if (expanding) {
+            console.warn("Graph is busy (expanding/modifying). Please try toggling legend item later.");
+            return; // Prevent concurrent modifications
+        }
+
+        expanding = true
+
+        console.log(activeLegendItems[itemKey])
+        let wasActive = activeLegendItems[itemKey]
+        activeLegendItems[itemKey] = !activeLegendItems[itemKey]
+        console.log(activeLegendItems[itemKey])
+
+        if (wasActive) {
+            console.log(`Deactivating relation type: ${itemKey}`)
+            _remove_edges_and_orphans_by_type(itemKey)
+            updateGraph()
+        } else {
+            // Relation was inactive, now it's being activated (marked)
+            console.log(`Activating relation type: ${itemKey}`);
+            await _add_edges_for_newly_active_type(itemKey);
+            updateGraph()
+        }
+        
+        expanding = false; // Release lock
+        
+        legendDisplayItems = legendItemDetails.map(item => ({
+            ...item,
+            active: activeLegendItems[item.key] // Get current active state
+        }));
+
+        updateGraph()
+    }
+
+    function _remove_edges_and_orphans_by_type(relationType) {
+        if (simulation) {
+            simulation.stop().alpha(0); // Stop simulation during modification
+        }
+
+        const remainingEdges = [];
+        for (const edge of edges) {
+            if (edge.type === relationType) {
+                // Decrement link count for connected nodes
+                if (edge.source) edge.source.linkCount--;
+                if (edge.target) edge.target.linkCount--;
+            } else {
+                remainingEdges.push(edge);
+            }
+        }
+        edges = remainingEdges;
+
+        // Remove orphan nodes (nodes with linkCount 0 that are NOT expanded and NOT selected)
+        const currentNodes = [];
+        for (const node of nodes) {
+            if (node.linkCount === 0 && !node.expanded && node.id !== selectedNodeId) {
+                nodeMap.delete(node.id); // Remove from map
+            } else {
+                currentNodes.push(node);
+            }
+        }
+        nodes = currentNodes;
+        
+        // Ensure nodes array reflects the current state of nodeMap if any selected/expanded nodes were somehow affected
+        // This pass primarily cleans up non-essential orphans.
+        // A more robust cleanup might be needed if expanded nodes can become "orphaned" by filters.
+    }
+
+    async function _add_edges_for_newly_active_type(relationType) {
+        if (simulation) {
+            simulation.stop().alpha(0);
+        }
+
+        const currentExpandedNodes = [...expandedNodes]; // Iterate over a stable copy
+
+        for (const sourceNode of currentExpandedNodes) {
+            const nodeId = sourceNode.id;
+            const letter = nodeId.slice(0, 2);
+
+            if (!cache[letter] || !cache[letter][nodeId]) {
+                console.warn(`Cache miss for expanded node ${nodeId} while re-activating relation ${relationType}`);
+                continue;
+            }
+            const nodeInfo = cache[letter][nodeId];
+            
+            let dataAccessKey = relationType; // relationType is the legend key
+            if (relationType === "cs") {
+                dataAccessKey = "gc";
+            } else if (relationType === "gc") {
+                dataAccessKey = "cs";
+            }
+            const relationData = nodeInfo[dataAccessKey];
+
+            if (!relationData) continue;
+
+            let relatedIds = [];
+            if (Array.isArray(relationData)) {
+                relatedIds = relationData;
+            } else if (typeof relationData === 'object' && relationData !== null) {
+                relatedIds = Object.keys(relationData);
+            }
+
+            for (const targetId of relatedIds) {
+                let targetNode = nodeMap.get(targetId);
+                if (!targetNode) {
+                    const newNode = await addNode(targetId); // addNode adds to 'nodes' and 'nodeMap'
+                    if (!newNode) continue;
+                    targetNode = newNode;
+                }
+
+                const edgeExists = edges.some(e =>
+                    e.type === relationType &&
+                    ((e.source.id === nodeId && e.target.id === targetId) ||
+                    (e.source.id === targetId && e.target.id === nodeId))
+                );
+
+                if (!edgeExists && sourceNode && targetNode) {
+                    edges.push({
+                        source: sourceNode,
+                        target: targetNode,
+                        type: relationType
+                    });
+                    sourceNode.linkCount++;
+                    targetNode.linkCount++;
+                }
+            }
+
+        }
+        edges = [...edges]; // Trigger Svelte reactivity
+        nodes = [...nodes]; // Trigger Svelte reactivity
     }
 
     //D3 variables
@@ -468,31 +635,6 @@
             svgEdges = zoomGroup.append("g").attr("stroke", "#999").attr("stroke-opacity", 0.6);
             svgNodes = zoomGroup.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5);
             svgLabels = zoomGroup.append("g").attr("class", "labels");
-
-            // --- Creating legend for the colors ---
-            const legendGroup = svg.append("g")
-                .attr("class", "legend")
-                .attr("transform", "translate(20, 20)")
-
-            legendItems.forEach((item, index) => {
-                const legendItemG = legendGroup.append('g')
-                    .attr("class", "legend-item")
-                    .attr("transform", `translate(0, ${index * 25})`)
-
-                legendItemG.append('rect')
-                    .attr("width", 18)
-                    .attr("height", 18)
-                    .style("fill", item.color)
-
-                legendItemG.append('text')
-                    .attr("x", 24)
-                    .attr("y", 9)
-                    .attr("dy", "0.35em")
-                    .style("font-family", "sans-serif")
-                    .style("font-size", "12px")
-                    .style("fill", "#fff") // Text color for the legend
-                    .text(item.text);
-            })
 
             simulation.on("end", () => {
                 tickCount = 0;
@@ -645,9 +787,74 @@
                     .attr("font-weight", d => d.id === selectedNodeId ? "bold" : "normal"), // Garante que o negrito é aplicado no update
                 exit => exit.remove()
             );
+
+            // --- Creating legend for the colors ---
+            let legendGroup = svg.select("g.legend")
+            if (legendGroup.empty()){
+                legendGroup = svg.append("g")
+                    .attr("class", "legend")
+                    .attr("transform", "translate(20, 20)")
+            }
+
+            const legendItemSelection = legendGroup.selectAll("g.legend-item")
+                .data(legendDisplayItems, d => d.key)
+            
+            legendItemSelection.join(
+                enter => {
+                    const legendItemG = enter.append('g')
+                        .attr("class", "legend-item")
+                        .attr("transform", (d, i) => `translate(0, ${i * 25})`)
+                        .style("cursor", d => d.clickable ? "pointer" : "default")
+                        .on("click", (event, d_clicked) => { // Use d_clicked to avoid conflict with outer d if any
+                            toggleLegendItem(d_clicked.key);
+                        });
+                    
+                    legendItemG.append('rect')
+                        .attr("class", "legend-color-checkbox")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        // Fill color depends on the active state
+                        .style("fill", d => d.active ? d.color : "black")
+                        // Border color is the item's specific color
+                        .style("stroke", d => d.color) // Checkbox border color
+                        .style("stroke-width", 1);
+
+                    // Text label for the legend item
+                    legendItemG.append('text')
+                        .attr("class", "legend-text")
+                        .attr("x", 22 + 18 + 5) // Positioned after the color swatch, with some padding
+                        .attr("y", 9) // Align with middle of checkbox/color swatch
+                        .attr("dy", "0.35em") // Vertical alignment adjustment
+                        .style("font-family", "sans-serif")
+                        .style("font-size", "12px")
+                        .style("fill", "#fff") // Text color for the legend
+                        .text(d => d.text);
+                        
+                        return legendItemG;
+                    },
+                    update => {
+                        console.log("Updating legend")
+                        
+                        // Update the checkmark text (visibility) when data changes
+                        update.select("rect.legend-color-checkbox")
+                        .style("fill", d => d.active ? d.color : "none");
+                        
+                        update.select("text.legend-text")
+                            .style("text-decoration", d => d.active ? "none" : "line-through")
+                            .style("opacity", d => d.active ? 1 : 0.6)
+
+                    // If color or text could change, update them here too:
+                    // update.select("rect.color-swatch").style("fill", d => d.color);
+                    // update.select("text.legend-text").text(d => d.text);
+                    return update;
+                },
+                exit => exit.remove()
+            )
     }
 
-   onMount(() => {
+    onMount(() => {
         resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 width = entry.contentRect.width;
@@ -677,7 +884,6 @@
             }
         };
     });
-
 </script>
 
 <div class="graph-visualization">
@@ -749,5 +955,13 @@
     .tooltip strong{
         fill: white;
         color: white;
+    }
+
+    .relations-selector-container {
+        display: flex;
+        align-items: center;
+        position: absolute;
+
+        left: 450px;
     }
 </style>
