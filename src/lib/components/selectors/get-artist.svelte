@@ -1,13 +1,13 @@
 <script>
 	//Output of the component - an id of a selected artist
 	export let artistId;
+	export let searching = false;
 	//Shared resource - lock when graph is expanding
 
 	//To get what the user typed
 	let userInput;
 	//To manage search success
 	let interacted = false;
-	let searching = false;
 	let successfulRequest = false;
 	let successfulSearch = false;
 	//To manage user choice on results
@@ -125,8 +125,8 @@
 	.container {
 		position: fixed;
 		top: 40px;
-		left: 50%;
-		transform: translateX(-50%);
+		right: 40px;
+		/* transform: translateX(-50%); */
 		z-index: 1000;
 
 		width: 90%;

@@ -163,8 +163,9 @@
                         sourceNode.linkCount += 1;
                         targetNode.linkCount += 1;
                     }
-
-                    updateGraph()
+                    
+                    // TODO: Review Graph animation
+                    // updateGraph()
                 }
             } else if(typeof relationData === 'object' && relationData !== null) {
                 relatedIds = Object.keys(relationData);
@@ -192,7 +193,8 @@
                         sourceNode.linkCount += 1;
                         targetNode.linkCount += 1;
                     }
-                    updateGraph() // Called once after all relations for the node are processed
+                    // TODO: Review Graph animation
+                    // updateGraph() // Called once after all relations for the node are processed
                 }
             }
         }
@@ -707,11 +709,11 @@
 </div>
 
 <style>
-    
     svg {
         display: block; /* Often good for SVG to prevent extra space */
-        width: 99vw;
-        height: 99vh;
+        width: 100vw;
+        height: 100vh;
+        box-sizing: border-box;
     }
 
     .graph-visualization {
