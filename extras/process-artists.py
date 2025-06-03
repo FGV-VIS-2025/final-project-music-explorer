@@ -140,7 +140,7 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                         for og_artist in work_map[cover_of]["a"]: #no verification here because it wont be in any work authorship by the criteriom
                             if og_artist == cover_artist:
                                 continue
-                            artist_map[cover_artist]["cs"][og_artist].add(cover_of)
+                            artist_map[cover_artist]["cs"][og_artist].add(work_map[cover_of]["n"])
                             artist_map[og_artist]["gc"].add(cover_artist)
 
 for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
@@ -154,7 +154,7 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
                 for og_artist in work_map[cover_of]["a"]:
                     if og_artist == cover_artist:
                         continue
-                    artist_map[cover_artist]["cs"][og_artist].add(cover_of)
+                    artist_map[cover_artist]["cs"][og_artist].add(work_map[cover_of]["n"])
                     artist_map[og_artist]["gc"].add(cover_artist)
 
     # generos = dictionary.get("genres", list())

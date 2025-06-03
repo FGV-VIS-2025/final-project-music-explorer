@@ -12,4 +12,4 @@ vite.config.ts.timestamp-*
 .virtual_documents/
 extras/tarxz/*
 extras/output/*.json
-static/graph/*
+static/graph*.zip
