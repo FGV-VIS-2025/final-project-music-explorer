@@ -412,6 +412,9 @@
     }
 
     let highlightNode;
+    let tooltipTop = 0;
+    let tooltipLeft = 0;
+
     //I call the function in the reactive block instead of doing directly there to avoid triggering by node or edge variable update
     $: HandleHighlight(highlightNode);
 
@@ -594,7 +597,7 @@
                     const g = enter.append("g")
                         .call(nodeDrag(simulation))
                         .on("click", nodeClick)
-                        .on("mouseenter", (event, d) => {highlightNode = d;})
+                        .on("mouseenter", (event, d) => {highlightNode = d; tooltipLeft = event.pageX; tooltipTop = event.pageY;})
                         .on("mouseleave", () => {highlightNode = null;}); // Simplified mouseleave
                     g.append("circle")
                         .attr("r", 20);
@@ -685,16 +688,25 @@
     </div>
     <div class="tooltip">
         {#if highlightNode}
-            <div style="position: absolute; top: 350px; left: 140px; background: white; color: black; padding: 5px; border: 1px solid #ccc; border-radius: 5px">
-                <strong>Artist:</strong> {highlightNode.n}
+            <div style="position: absolute; top: {tooltipTop}px; left: {tooltipLeft}px; transform: translate(15px, -20px);">
+                <strong>Artista:</strong> {highlightNode.n}
+                {#if selectedNodeId}
+                    {#if highlightNode.gc.includes(selectedNodeId)}
+                        <br>
+                        <strong>Músicas de {highlightNode.n} que {nodeMap.get(selectedNodeId).n} fez cover:</strong>
+                        {nodeMap.get(selectedNodeId).cs[highlightNode.id].join(", ")}
+                    {:else if highlightNode.cs.hasOwnProperty(selectedNodeId)}
+                        <br>
+                        <strong>Músicas de {nodeMap.get(selectedNodeId).n} que {highlightNode.n} fez cover:</strong>
+                        {highlightNode.cs[selectedNodeId].join(", ")}
+                    {/if}
+                {/if}
             </div>
         {/if}
     </div>
 </div>
 
 <style>
-    /* Removed '*' selector as it's too broad and can cause unintended styling issues. 
-       Set body or specific container color if a global default is needed. */
     
     svg {
         display: block; /* Often good for SVG to prevent extra space */
@@ -710,9 +722,32 @@
         align-items: center; /* Example: center the graph container */
     }
 
+    .tooltip div {
+        max-width: 45ch;
+
+        font-size: 80%;
+        color: white;
+
+        background-color: #393939e0;
+		box-shadow: 1px 1px 2px 2px #60606050;
+
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+
+        z-index: 1000;
+
+        transition-duration: 300ms;
+		transition-property: opacity, visibility;
+		&[hidden]:not(:hover, :focus-within) {
+			opacity: 0;
+			visibility: hidden;
+		}
+    }
+
     .tooltip div,
     .tooltip strong{
-        fill: black;
-        color: black;
+        fill: white;
+        color: white;
     }
 </style>
