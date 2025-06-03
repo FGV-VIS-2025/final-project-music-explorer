@@ -104,7 +104,7 @@
         <i>Artista ativo desde {searchResult["life-span"].begin}.</i>
     {/if}
     {#if searchResult.genres.length > 0}
-        <p>Principais gêneros musicais do artista: {#each searchResult.genres as genre} {genre.name}, {/each}</p>
+        <p>Principais gêneros musicais do artista: {searchResult.genres.map(d => d.name).join(", ")}</p>
     {/if}
     <h4>Histórico de lançamentos (álbuns, EPs e Singles)</h4>
     <ReleaseTimeseries bind:artistId={artistId}/>

@@ -6,10 +6,10 @@
     let dims = {
         width: 480,
         height: 270,
-        left: 30,
+        left: 40,
         bottom: 30,
         right: 10,
-        top: 10,
+        top: 20,
     }
 
     let svgNode = null;
@@ -28,28 +28,34 @@
     function processDates(results){
         dateGroup = d3.group(results, r => {
             try {
-                let date = new Date(r["first-release-date"]);
-                return date.toISOString().slice(0, 8);
+                const date = new Date(r["first-release-date"]);
+                const year = date.getFullYear()
+                const quarter = String(
+                    Math.floor((date.getMonth() + 1)/ 3) * 3
+                ).padStart(2, "0");
+                return `${year}-${quarter}`;
             } catch (error) {
                 return "na";
             }
         });
-        [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "na" ? new Date(`${d[0]}-01`) : null)
+        console.log(dateGroup);
+        [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "NaN-NaN" ? new Date(`${d[0]}-01`) : null)
         maxDate = new Date();
 
-        let current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+        let current = new Date(minDate.toISOString());
         dateRange = [];
         // Loop enquanto o ano/mês corrente for menor ou igual ao ano/mês da data máxima
         while (current.getFullYear() < maxDate.getFullYear() ||
             (current.getFullYear() === maxDate.getFullYear() &&
             current.getMonth() <= maxDate.getMonth())){
 
-            dateRange.push(current.toISOString().slice(0, 8));
+            dateRange.push(current.toISOString().slice(0, 7));
 
             // Avança para o próximo mês
-            current.setMonth(current.getMonth() + 1);
+            current.setMonth(current.getMonth() + 3);
         }
         dateRange = [...dateRange];
+        console.log(dateRange);
     }
 
     function getDate(date){
@@ -117,7 +123,7 @@
         if(dateGroup && minDate && maxDate){
             xScale = d3.scaleTime().domain([minDate, maxDate]).range([dims.left, dims.width - dims.right]);
             yScale = d3.scaleLinear().domain(d3.extent(dateRange, d => getDate(d).length)).range([dims.height - dims.bottom, dims.top]);
-            d3.select(xAxis).call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y")));
+            d3.select(xAxis).call(d3.axisBottom(xScale).ticks(8).tickFormat(d3.timeFormat("%Y")));
             d3.select(yAxis).call(d3.axisLeft(yScale));
         }
     }
@@ -137,8 +143,20 @@
     <p>Houve um problema ao carregar as informações de lançamentos do artista.</p>
 {:else if searchResults}
     <svg bind:this={svgNode} width={dims.width} height={dims.height} viewbox="0 0 {dims.width} {dims.height}">
-        <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis} />
-        <g transform = "translate({dims.left}, 0)" bind:this={yAxis} />
+        <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis}>
+        <text x={dims.width/2 + dims.left}
+              y={dims.bottom - 3}
+              fill="currentcolor"
+              text-anchor="end">Trimestre</text>
+        </g>
+        <g transform = "translate({dims.left}, 0)" bind:this={yAxis}>
+        <text x={-dims.left}
+              y="10"
+              fill="currentcolor"
+              text-anchor="start">
+              Quantidade de lançamentos
+              </text>
+        </g>
         {#if pathDefinition}
             <path
                 d={pathDefinition}
