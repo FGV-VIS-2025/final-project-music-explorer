@@ -3,6 +3,7 @@
     import SearchArtist from "$lib/components/selectors/get-artist.svelte";
     import ExpandedStack from "$lib/components/selectors/expanded-stack.svelte";
     import ArtistInfo from "$lib/components/artist-info.svelte";
+    import { image } from "d3";
 
     //Search variables
     let searchArtist;
@@ -16,6 +17,12 @@
     let displayInfo = true;
     let infoArtist;
     $: console.log("info:", infoArtist);
+
+    $: infoDisplay = displayInfo ? "block" : "none";
+
+    function showInfo() {
+        displayInfo = !displayInfo;
+    }
 </script>
 
 <!-- <h1>Music explorer</h1> -->
@@ -29,14 +36,28 @@
              bind:expandedNodes
              bind:expanding
              bind:selectedNodeId={infoArtist}/>
-{#if displayInfo}
-<div id="artist-info">
+
+<button on:click={showInfo} id="display-button" style="border: none;">
+    {#if displayInfo}
+        <img src={`icons/close.svg`} height="20rem" alt="close">
+    {:else}
+        <img src={`icons/chevron_left.svg`} height="20rem" alt="show">
+    {/if}
+</button>
+             
+<div id="artist-info" style="display: {infoDisplay};">
     <ArtistInfo artistId={infoArtist}/>
 </div>
-{/if}
 
 
 <style>
+    #display-button {
+        position: fixed;
+        top: 130px;
+        right: 45px;
+        z-index: 1000;
+    }
+    
     #artist-info {
         position: fixed;
         top: 120px;
