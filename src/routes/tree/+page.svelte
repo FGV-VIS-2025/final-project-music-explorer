@@ -120,39 +120,145 @@
     }
 </script>
 
-<main>
-    <div class="search-container">
-        <input
-            type="text"
-            bind:value={searchTerm}
-            placeholder="Pesquisar por um gênero..."
-            aria-label="Search for a genre"
-        />
-    </div>
 
-    {#if originalHierarchicalData}
-        <CollapsibleTree data={originalHierarchicalData} highlightedNames={highlightedNodeNames} />
-    {:else if searchTerm.trim()}
-        <p>Aguardando dados para pesquisar por "{searchTerm}".</p>
-    {:else}
-        <p>Carregando dados ou dados de gênero não disponíveis...</p>
-    {/if}
+<div class="container">
+    <form on:submit={searchTerm}>
+        <div class="artistSearchBar">
+            <input
+                id="cityInput"
+                type="text"
+                bind:value={searchTerm}
+                required
+                placeholder="Busque por um gênero"
+            />
+            <button type="submit">Buscar</button>
+        </div>
+    </form>
+</div>
+
+<main>
+    <CollapsibleTree data={originalHierarchicalData} highlightedNames={highlightedNodeNames} />
 </main>
+
 
 <style>
     main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        gap: 20px;
+        background-color: var(--accent-black);
     }
-    .search-container { margin-bottom: 10px; }
-    input[type="text"] {
-        color: black;
-        padding: 10px; font-size: 1rem; width: 300px;
-        max-width: 100%; border: 1px solid #ccc; border-radius: 4px;
-    }
-    p { color: #333; }
 
+	.container {
+		position: fixed;
+		top: 40px;
+		right: 40px;
+		/* transform: translateX(-50%); */
+		z-index: 1000;
+
+		width: 90%;
+		max-width: 500px;
+		box-sizing: border-box;
+	}
+
+    .artistSearchBar {
+        display: flex;
+        width: 100%;
+        position: relative;
+        background-color: rgba(100, 100, 100, 0.6);
+        box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .artistSearchBar input {
+        flex-grow: 1;
+        padding: 12px 15px;
+        border: none;
+        border-radius: 6px 0 0 6px;
+        background-color: var(--accent-black);
+        color: white;
+        font-size: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+	.artistSearchBar input:focus {
+		outline: #0056b3;
+	}
+
+    .artistSearchBar button[type="submit"] {
+        padding: 0 18px;
+        color: white;
+        background-color: #007bff;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: bold;
+        position: relative;
+        z-index: 1;
+        transition: background-color 0.2s ease;
+    }
+
+	.artistSearchBar button[type="submit"]:hover {
+		background-color: #0056b3;
+	}
+
+    .results {
+        overflow-y: auto;
+        max-height: 250px;
+        padding: 5px;
+        margin-top: 10px;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+    }
+
+    .searchResult {
+        display: block;
+        width: 100%;
+        padding: 12px 15px;
+        text-align: left;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+        color: #333;
+        transition: background-color 0.15s ease;
+    }
+
+	.searchResult:last-child {
+		border-bottom: none;
+	}
+
+    .searchResult:hover,
+	.searchResult:focus {
+		background-color: #e9e9e9;
+		border-radius: 4px;
+	}
+
+	.erro {
+		color: #dc3545;
+		margin-top: 10px;
+	}
+
+	.toggle-button {
+		margin-top: 10px;
+		padding: 8px 15px;
+		background-color: #6c757d;
+		color: white;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.toggle-button:hover {
+		background-color: #5a6268;
+	}
+
+	.disambiguation {
+		font-size: 80%;
+		color: gray;
+	}
 </style>

@@ -6,10 +6,10 @@
     export let highlightedNames = new Set();
 
     const width = 928;
-    const marginTop = 10;
-    const marginRight = 10;
-    const marginBottom = 10;
-    const marginLeft = 40;
+    const marginTop = 100;
+    const marginRight = 40;
+    const marginBottom = 100;
+    const marginLeft = 100;
 
     // $: console.log("Render triggered. HighlightedNames:", Array.from(highlightedNames));
 
@@ -90,11 +90,11 @@
         if (gNode) gNode.selectAll("*").remove();
         if (gLink) gLink.selectAll("*").remove();
         if (svg) {
-            svg.attr("height", 100).attr("viewBox", [
+            svg.attr("height", 0).attr("viewBox", [
                 -marginLeft,
                 -marginTop,
                 width,
-                100,
+                0,
             ]);
         }
         root = null;
@@ -439,4 +439,25 @@
     }
 </script>
 
-<svg bind:this={svgContainer}></svg>
+<div id="svg-wrapper">
+    <svg bind:this={svgContainer}></svg>
+</div>
+
+<style>
+    #svg-wrapper {
+        height: 100vh;
+        width: 100vw;
+
+        /* border: 3px solid red; */
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+    
+    svg {
+        display: block;
+        min-height: 100%;
+        /* border: 3px solid red; */
+        box-sizing: border-box;
+
+    }
+</style>
