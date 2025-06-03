@@ -32,16 +32,16 @@
     .container {
         position: fixed;
         bottom: 40px;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 40px;
+        /* transform: translateX(-50%); */
         z-index: 1000;
 
         background-color: var(--accent-black);
         border-radius: 8px;
-        border: 3px solid #FF0000;
+        border: 2px solid rgba(100, 100, 100, 0.6);
 
         padding: 10px;
-        box-shadow: 0 2px 10px rgba(256, 256, 256, 0.25);
+        box-shadow: 0 0px 5px rgba(256, 256, 256, 0.25);
         width: 90%;
         max-width: 500px;
         box-sizing: border-box;
