@@ -13,6 +13,7 @@
     let removeNode;
     let expanding = false;
 
+    let nodeMap = new Map();
 
     let displayInfo = true;
     let infoArtist;
@@ -35,7 +36,8 @@
              removeArtist={removeNode}
              bind:expandedNodes
              bind:expanding
-             bind:selectedNodeId={infoArtist}/>
+             bind:nodeMap
+             bind:selectedNode={infoArtist}/>
 
 <button on:click={showInfo} id="display-button" style="border: none;">
     {#if displayInfo}
@@ -46,7 +48,7 @@
 </button>
              
 <div id="artist-info" style="display: {infoDisplay};">
-    <ArtistInfo artistId={infoArtist}/>
+    <ArtistInfo artist={infoArtist}/>
 </div>
 
 
@@ -74,5 +76,8 @@
         /* height: 90%; */
         max-width: 500px;
         box-sizing: border-box;
+
+        overflow-y: scroll;
+        overflow-x: hidden;
     }
 </style>
