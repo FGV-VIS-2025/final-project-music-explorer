@@ -20,7 +20,7 @@
 
 <!-- <h1>Music explorer</h1> -->
 
-<SearchArtist bind:artistId={searchArtist}/>
+<SearchArtist bind:artistId={searchArtist} bind:searching={expanding}/>
 <ExpandedStack bind:expandedNodes
                bind:removeNode
                bind:expanding/>
@@ -37,20 +37,21 @@
 
 
 <style>
-#artist-info {
-    position: fixed;
-    bottom: 5%;
-    right: 5%;
-    z-index: 999;
+    #artist-info {
+        position: fixed;
+        top: 120px;
+        bottom: 40px;
+        right: 40px;
+        z-index: 999;
 
-    background-color: var(--accent-black);
-    border-radius: 8px;
-    border: 3px solid #FF0000;
+        background-color: var(--accent-black);
+        border-radius: 8px;
+        border: 2px solid rgba(100, 100, 100, 0.6);
 
-    padding: 10px;
-    box-shadow: 0 2px 10px rgba(256, 256, 256, 0.25);
-    height: 90%;
-    max-width: 500px;
-    box-sizing: border-box;
-}
+        padding: 10px;
+        box-shadow: 0 0px 5px rgba(256, 256, 256, 0.25);
+        /* height: 90%; */
+        max-width: 500px;
+        box-sizing: border-box;
+    }
 </style>
