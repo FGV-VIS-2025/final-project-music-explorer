@@ -8,7 +8,8 @@
     export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
     export let expandedNodes = []; //Shared resource with other components
     export let expanding; //Shared resource with other components
-    export let selectedNodeId = null; //Shared resource with other components
+    export let selectedNode = null; //Shared resource with other components
+    export let nodeMap; //Map to easen getting a node object by its id
 
     let svgNode;
 
@@ -18,7 +19,6 @@
     let cache = {}; //Where to hold raw data fetched by file
     let nodes = []; //Where node objects are saved
     let edges = []; //Where the edges are saved
-    let nodeMap = new Map(); //Map to easen getting a node object by its id
 
     let relations = ["ms", "im", "cs", "gc"]; //Type of relations between nodes
     let colorPallete = [
@@ -300,7 +300,7 @@
             expanding = false;
         }
     }
-
+    let selectedNodeId;
     //Handle artist click event
     function nodeClick(event, node){
         if(!expanding){
@@ -362,6 +362,10 @@
             }
         }
     }
+    $: {
+        selectedNode = nodeMap.get(selectedNodeId);
+    }
+
 
     //Functions to handle node dragging
     function nodeDrag(graphSim) {
@@ -663,11 +667,13 @@
         }
 
         const id = "a6c6897a-7415-4f8d-b5a5-3a5e05f3be67"; // Example initial node
+        expanding = true;
         addNode(id).then((node) => {
             if (node){
                 addNodeRelations(id).then(() => {
                     nodes = [...nodes]; // Ensure Svelte sees the change if nodes array itself needs to be reactive
                     selectedNodeId = id;
+                    expanding = false;
                     updateGraph();
                 });
             }

@@ -2,8 +2,15 @@
     import * as d3 from "d3";
     import { onMount } from "svelte";
     import ReleaseTimeseries from "$lib/components/charts/release-timeseries.svelte";
+    import PieChart from "$lib/components/charts/pie.svelte"
     //input of the component - artist to display info
-    export let artistId;
+    export let artist;
+    export let nodeMap;
+    export let expanding;
+    let node;
+
+
+    $: console.log(nodeMap);
 
     let searching = false;
 	let successfulRequest = false;
@@ -73,10 +80,22 @@
         }
     }
 
+    let pieData;
+    $: {
+        if(artist){
+            console.log(nodeMap);
+            pieData = [["im", artist.im.length],
+                    ["ms", artist.ms.length],
+                    ["cs", Object.keys(artist.cs).length],
+                    ["gc", artist.gc.length]]
+            console.log(pieData);
+        }
+    }
+
     let mounted = false;
     onMount(() => {
-        if(artistId){
-            lookupArtist(artistId).then(() => {
+        if(artist){
+            lookupArtist(artist.id).then(() => {
                 mounted = true;
             })
         } else {
@@ -85,8 +104,8 @@
     })
 
     $: {
-        if(artistId && mounted){
-            lookupArtist(artistId);
+        if(artist && mounted){
+            lookupArtist(artist.id);
         }
     }
 
@@ -107,5 +126,9 @@
         <p>Principais gêneros musicais do artista: {searchResult.genres.map(d => d.name).join(", ")}</p>
     {/if}
     <h4>Histórico de lançamentos (álbuns, EPs e Singles)</h4>
-    <ReleaseTimeseries bind:artistId={artistId}/>
+    <ReleaseTimeseries bind:artistId={artist.id}/>
+    {#if pieData}
+        <h4>Proporção dos tipos de relação do artista</h4>
+        <PieChart data={pieData}/>
+    {/if}
 {/if}
