@@ -483,18 +483,14 @@
 
         expanding = true
 
-        console.log(activeLegendItems[itemKey])
         let wasActive = activeLegendItems[itemKey]
         activeLegendItems[itemKey] = !activeLegendItems[itemKey]
-        console.log(activeLegendItems[itemKey])
 
         if (wasActive) {
-            console.log(`Deactivating relation type: ${itemKey}`)
             _remove_edges_and_orphans_by_type(itemKey)
             updateGraph()
         } else {
             // Relation was inactive, now it's being activated (marked)
-            console.log(`Activating relation type: ${itemKey}`);
             await _add_edges_for_newly_active_type(itemKey);
             updateGraph()
         }
@@ -835,8 +831,6 @@
                         return legendItemG;
                     },
                     update => {
-                        console.log("Updating legend")
-                        
                         // Update the checkmark text (visibility) when data changes
                         update.select("rect.legend-color-checkbox")
                         .style("fill", d => d.active ? d.color : "none");
