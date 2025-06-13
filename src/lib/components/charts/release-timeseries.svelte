@@ -25,6 +25,7 @@
     let dateRange = [];
     let minDate;
     let maxDate;
+
     function processDates(results){
         dateGroup = d3.group(results, r => {
             try {
@@ -157,7 +158,7 @@
               Quantidade de lançamentos
               </text>
         </g>
-        {#if pathDefinition}
+        <!-- {#if pathDefinition}
             <path
                 d={pathDefinition}
                 fill="none"
@@ -166,6 +167,29 @@
                 stroke-linejoin="round"
                 stroke-linecap="round"
             />
-        {/if}
+        {/if} -->
+
+        {#each dateRange as dateString}
+            {@const count = getDate(dateString).length}
+            {#if count > 0}
+                {@const x = xScale(new Date(dateString))}
+                <line
+                    x1={x}
+                    x2={x}
+                    y1={yScale(0)}
+                    y2={yScale(count)}
+                    stroke-width="1"
+                    fill="white"
+                    stroke="white"
+                />
+                <circle
+                    cx={x}
+                    cy={yScale(count)}
+                    r="3"
+                    fill="white"
+                    stroke="white"
+                />
+            {/if}
+        {/each}
     </svg>
 {/if}
