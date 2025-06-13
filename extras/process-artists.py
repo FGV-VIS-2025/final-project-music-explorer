@@ -118,7 +118,7 @@ for work in tqdm(work_map):
     total_sum = sum(work_map[work]["a"].values())
     true_authors = list()
     for artist, count in work_map[work]["a"].items():
-        if count/total_sum > 0.1:
+        if count/total_sum > 0.5:
             true_authors.append(artist)
             artist_map[artist]["c"] += 1 #authoral work count
     work_map[work]["a"] = true_authors
