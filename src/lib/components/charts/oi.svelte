@@ -3,7 +3,6 @@ import * as d3 from 'd3';
 import { tweened } from 'svelte/motion';
 import { cubicOut } from 'svelte/easing';
 
-// --- Variables ---
 // Props
 export let data = [];
 export let selectedKey = null;
@@ -15,9 +14,8 @@ const radius = Math.min(width, height) / 2 * 0.7; // Reduce radius to make space
 
 // D3 Generators
 const pieGenerator = d3.pie().value(d => d[1]).sort(null);
-const arcGenerator = d3.arc().innerRadius(0).outerRadius(radius);
+const arcGenerator = d3.arc().innerRadius(radius * 0.3).outerRadius(radius);
 const outerArcGenerator = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
-
 
 // D3 Color Scale
 const colors = d3.scaleOrdinal()
@@ -51,8 +49,7 @@ $: {
 }
 
 $: {
-    // Reactive block that runs on every "frame" of the tween for smooth 
-    // transition
+    // This reactive block will now run on every "frame" of the tween
     if ($tweenedData) {
         chartData = $tweenedData.map(d => {
             const angle = midAngle(d);
@@ -76,11 +73,12 @@ $: {
         });
     }
 }
+
 </script>
 
 <div class="container">
-    <svg viewBox = "-{width/2} -{height/2} {width} {height}">
-        <!-- Pie slices -->
+    <svg viewBox="-{width/2} -{height/2} {width} {height}">
+        <!-- Group for the pie slices -->
         <g class="slices">
             {#each chartData as slice (slice.key)}
                 <path
@@ -92,7 +90,7 @@ $: {
             {/each}
         </g>
 
-        <!-- Lines connecting slices to labels -->
+        <!-- Group for the lines connecting slices to labels -->
         <g class="lines">
             {#each chartData as slice (slice.key)}
                  <polyline
@@ -102,7 +100,7 @@ $: {
             {/each}
         </g>
 
-        <!-- Text labels -->
+        <!-- Group for the text labels -->
         <g class="labels">
             {#each chartData as slice (slice.key)}
                 <text
@@ -115,34 +113,22 @@ $: {
                 </text>
             {/each}
         </g>
-        
-        <!-- {#each arcs as arc, index}
-            <path d={arc} fill={colors(index)}
-            class:selected={selectedIndex === index}
-            on:click={e => selectedIndex = selectedIndex === index ? -1 : index} />
-        {/each} -->
     </svg>
 </div>
 
 <style>
-    svg {
-        max-width: 15em;
-        margin-block: 2em;
-
-        /* Do not clip shapes outside the viewBox */
-        overflow: visible;
-        width: 50%;
-        margin: auto;
-
-        overflow: visible;
-    }
-
     .container {
         display: flex;
         justify-content: center;
         align-items: center;
         width: 100%;
         font-family: sans-serif;
+    }
+
+    svg {
+        max-width: 100%;
+        width: 400px;
+        overflow: visible; /* Important to see labels outside the main radius */
     }
 
     /* --- Path/Slice Styles --- */
@@ -196,38 +182,4 @@ $: {
         font-weight: bold;
     }
 
-    /* svg:has(path:hover) path:not(:hover) {
-        opacity: 50%;
-    }
-
-    path {
-        transition: 300ms;
-        cursor: pointer;
-    }
-
-    .container{
-        display: flex;
-        align-items: center;
-        gap: 0.6em;
-    }
-
-    svg:has(.selected) path:not(.selected) {
-        opacity: 50%;
-    }
-
-    .selected {
-        --color: oklch(60% 45% 0) !important;
-
-        &:is(path) {
-            fill: var(--color) !important;
-        }
-
-        &:is(li) {
-            color: var(--color);
-        }
-    }
-
-    path:hover {
-        opacity: 100% !important;
-    } */
 </style>
