@@ -131,5 +131,5 @@
 {/if}
 {#if pieData}
     <h4>Proporção dos tipos de relação do artista</h4>
-    <PieChart data={pieData}/>
+    <PieChart data={pieData} name={artist.n}/>
 {/if}

@@ -102,14 +102,9 @@
         }
     }
 
+    let queried = true;
     onMount(() => {
-        if(artistId){
-            browseReleaseGroups(artistId).then(() => {
-                mounted = true;
-            })
-        } else {
-            mounted = true;
-        }
+        mounted = true;
     })
 
     $: {
@@ -141,7 +136,9 @@
 {#if searching}
     <p>Carregando informações de lançamentos...</p>
 {:else if !successfulSearch}
-    <p>Houve um problema ao carregar as informações de lançamentos do artista.</p>
+    <div>Houve um problema ao carregar as informações de lançamentos do artista.
+        <button on:click={evt => browseReleaseGroups(artistId)}>Tentar novamente</button>
+    </div>
 {:else if searchResults}
     <svg bind:this={svgNode} width={dims.width} height={dims.height} viewbox="0 0 {dims.width} {dims.height}">
         <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis}>
@@ -192,4 +189,17 @@
             {/if}
         {/each}
     </svg>
+    <i>Inclui relançamentos e edições especiais.</i>
 {/if}
+
+<style>
+button {
+    border: 2px solid white;
+    border-radius: 5px;
+    margin: 0.5ch;
+    margin-top: 1ch;
+    padding: 4px;
+    font-size: 85%;
+    cursor: pointer;
+}
+</style>
