@@ -128,6 +128,7 @@
         originalDataRoot.descendants().forEach((d, index) => {
             d.id = `node-${index}`;
             d._children = d.children;
+            d.children = null;
         });
 
         previousHighlightedNames = new Set(highlightedNames);
@@ -161,16 +162,7 @@
 
             if (targetNode) {
                 newDisplayRoot = targetNode;
-                console.log(`Display root set to: "${targetName}"`);
-            } else {
-                console.warn(
-                    `Node "${targetName}" not found for new root. Using original root.`,
-                );
             }
-        } else {
-            console.log(
-                "Display root set to original data root (highlightedNames < 2 or not set).",
-            );
         }
 
         root = newDisplayRoot;
