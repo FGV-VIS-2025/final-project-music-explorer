@@ -122,10 +122,15 @@
     let xAxis, yAxis;
     $: {
         if(dateGroup && minDate && maxDate){
-            xScale = d3.scaleTime().domain([minDate, maxDate]).range([dims.left, dims.width - dims.right]);
+            const startYear = new Date(minDate);
+            startYear.setFullYear(startYear.getFullYear() - 1);
+
+            const maxCount = d3.max(dateRange, d => getDate(d).length) || 1;
+            
+            xScale = d3.scaleTime().domain([startYear, maxDate]).range([dims.left, dims.width - dims.right]);
             yScale = d3.scaleLinear().domain(d3.extent(dateRange, d => getDate(d).length)).range([dims.height - dims.bottom, dims.top]);
             d3.select(xAxis).call(d3.axisBottom(xScale).ticks(8).tickFormat(d3.timeFormat("%Y")));
-            d3.select(yAxis).call(d3.axisLeft(yScale));
+            d3.select(yAxis).call(d3.axisLeft(yScale).ticks(maxCount).tickFormat(d3.format('d')));
         }
     }
 
