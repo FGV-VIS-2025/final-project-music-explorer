@@ -12,6 +12,7 @@
     let expandedNodes = [];
     let removeNode;
     let expanding = false;
+    let activeLegendItems;
 
     let nodeMap = new Map();
 
@@ -37,7 +38,8 @@
              bind:expandedNodes
              bind:expanding
              bind:nodeMap
-             bind:selectedNode={infoArtist}/>
+             bind:selectedNode={infoArtist}
+             bind:activeLegendItems={activeLegendItems}/>
 
 <button on:click={showInfo} id="display-button" style="border: none;">
     {#if displayInfo}
@@ -48,7 +50,7 @@
 </button>
              
 <div id="artist-info" style="display: {infoDisplay};">
-    <ArtistInfo artist={infoArtist}/>
+    <ArtistInfo artist={infoArtist} activeLegend={activeLegendItems}/>
 </div>
 
 

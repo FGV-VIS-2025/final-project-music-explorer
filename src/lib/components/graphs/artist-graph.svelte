@@ -10,6 +10,7 @@
     export let expanding; //Shared resource with other components
     export let selectedNode = null; //Shared resource with other components
     export let nodeMap; //Map to easen getting a node object by its id
+    export let activeLegendItems = {};
 
     let svgNode;
 
@@ -38,7 +39,6 @@
         { key: "default", text: "Not directly related to the selected artist/band", color: "#a0a0a0", clickable: false},
     ];
 
-    let activeLegendItems = {};
     legendItemDetails.forEach(item => {
         activeLegendItems[item.key] = true;
     });
@@ -59,6 +59,8 @@
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
     // $: console.log("selectedNodeData", nodeMap.get(selectedNodeId)); // Retained for potential debugging, uncomment if needed
 
+    $: console.log(activeLegendItems);
+
     function getNodeColor(d) {
         if (!selectedNodeId) {
             // Default color
@@ -75,24 +77,26 @@
             return colorPallete[0];
         }
 
-        // 2. If the related node has made a cover of him ("cs")
-        if (d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
-            return colorPallete[1];
-        }
+        //membership relations come first so they wont be painted with cover data
 
-        // 3. If the related node is a member ("ms")
-        if (selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
+        // 1. If the related node is a member ("ms")
+        if (activeLegendItems.ms && selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
             return colorPallete[2];
         }
 
-        // 4. If the related node is a band the expanded node is in ("im")
-        if (selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
+        // 2. If the related node is a band the expanded node is in ("im")
+        if (activeLegendItems.im && selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
             return colorPallete[3];
         }
 
-        // 5. If the related node is an artist the expanded node covered ("gc")
-        if (selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
+        // 3. If the related node is an artist the expanded node covered ("gc")
+        if (activeLegendItems.gc && selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
             return colorPallete[4];
+        }
+
+        // 4. If the related node has made a cover of him ("cs")
+        if (activeLegendItems.cs && d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
+            return colorPallete[1];
         }
 
         // Default color for other nodes

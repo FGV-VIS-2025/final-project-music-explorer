@@ -20,8 +20,15 @@ colocados no diretório, basta usar o script:
 $ python process-artists.py
 ```
 
-Os arquivos JSON resultantes de todos os scripts são armazenados na pasta
-`output`.
+Os arquivos JSON resultantes desses dois scripts estarão disponíveis na pasta
+`outputs`.
+
+Para dividir o arquivo dos grafos em arquivos menores, prontos para serem
+carregados pelo site, é necessário executar:
+
+```bash
+$ python split-artists.py
+```
 
 ## Sobre
 

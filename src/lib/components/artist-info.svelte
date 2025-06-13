@@ -7,6 +7,7 @@
     export let artist;
     export let nodeMap;
     export let expanding;
+    export let activeLegend;
     let node;
 
 
@@ -84,10 +85,10 @@
     $: {
         if(artist){
             console.log(nodeMap);
-            pieData = [["im", artist.im.length],
-                    ["ms", artist.ms.length],
-                    ["cs", Object.keys(artist.cs).length],
-                    ["gc", artist.gc.length]]
+            pieData = [["im", activeLegend.im ? artist.im.length: 0],
+                    ["ms", activeLegend.ms ? artist.ms.length : 0],
+                    ["cs", activeLegend.gc ? Object.keys(artist.cs).length : 0],
+                    ["gc", activeLegend.cs ? artist.gc.length : 0]]
             console.log(pieData);
         }
     }
