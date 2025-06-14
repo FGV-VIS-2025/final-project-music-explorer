@@ -114,27 +114,49 @@
     }
 
     let xScale, yScale;
+	let xScaleZoomed;
     let xAxis, yAxis;
-    $: {
-        if(dateGroup && minDate && maxDate){
-            const startYear = new Date(minDate);
-            startYear.setFullYear(startYear.getFullYear() - 1);
 
+	$: {
+		if (dateGroup && minDate && maxDate) {
+            const startYear = new Date(minDate);
             const maxCount = d3.max(dateRange, d => getDate(d).length) || 1;
-            
-            xScale = d3.scaleTime().domain([startYear, maxDate]).range([dims.left, dims.width - dims.right]);
-            yScale = d3.scaleLinear().domain(d3.extent(dateRange, d => getDate(d).length)).range([dims.height - dims.bottom, dims.top]);
-            d3.select(xAxis).call(d3.axisBottom(xScale).ticks(8).tickFormat(d3.timeFormat("%Y")));
-            d3.select(yAxis).call(d3.axisLeft(yScale).ticks(maxCount).tickFormat(d3.format('d')));
+
+            startYear.setFullYear(startYear.getFullYear());
+
+            xScale = d3.scaleTime()
+							.domain([startYear, maxDate])
+							.range([dims.left, dims.width - dims.right]);
+
+            yScale = d3.scaleLinear()
+						.domain([0, maxCount + 1])
+						.range([dims.height - dims.bottom, dims.top]);
+
+            if (!xScaleZoomed) {
+                xScaleZoomed = xScale;
+            }
+
+			d3.select(xAxis).call(d3.axisBottom(xScaleZoomed).ticks(8).tickFormat(d3.timeFormat("%Y")));
+            d3.select(yAxis).call(d3.axisLeft(yScale).ticks(Math.min(maxCount, 8)).tickFormat(d3.format('d')));
+
+			setupZoom();
         }
     }
 
-    let lineGenerator, pathDefinition;
-    $: lineGenerator = d3.line()
-    .x(d => xScale(new Date(`${d}-01`)))
-    .y(d => yScale(getDate(d).length));
+	function setupZoom() {
+        if (!svgNode) return;
 
-    $: pathDefinition = (dateGroup && dateRange.length > 0 && lineGenerator) ? lineGenerator(dateRange) : "";
+        const zoom = d3.zoom()
+            .scaleExtent([1, 10])
+            // .translateExtent([[dims.left, 0], [dims.width - dims.right, dims.height]])
+            .on('zoom', zoomed);
+
+        d3.select(svgNode).call(zoom);
+    }
+
+	function zoomed(event) {
+        xScaleZoomed = event.transform.rescaleX(xScale);
+    }
 
 </script>
 
@@ -144,8 +166,9 @@
     <div>Houve um problema ao carregar as informações de lançamentos do artista.
         <button on:click={evt => browseReleaseGroups(artistId)}>Tentar novamente</button>
     </div>
-{:else if searchResults}
+{:else if searchResults && xScaleZoomed}
     <svg bind:this={svgNode} width={dims.width} height={dims.height} viewbox="0 0 {dims.width} {dims.height}">
+
         <g transform = "translate(0, {dims.height - dims.bottom})" bind:this={xAxis}>
         <text x={dims.width/2 + dims.left}
               y={dims.bottom - 3}
@@ -170,11 +193,11 @@
                 stroke-linecap="round"
             />
         {/if} -->
-
+        <g clip-path="url(#clip)">
         {#each dateRange as dateString}
             {@const count = getDate(dateString).length}
             {#if count > 0}
-                {@const x = xScale(new Date(dateString))}
+                {@const x = xScaleZoomed(new Date(dateString))}
                 <line
                     x1={x}
                     x2={x}
@@ -193,6 +216,18 @@
                 />
             {/if}
         {/each}
+		</g>
+
+		<defs>
+            <clipPath id="clip">
+                <rect
+					x={dims.left}
+					y={dims.top}
+					width={dims.width - dims.left - dims.right}
+					height={dims.height - dims.top - dims.bottom}
+				/>
+            </clipPath>
+        </defs>
     </svg>
     <i>Inclui relançamentos e edições especiais.</i>
 {/if}
