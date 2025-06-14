@@ -29,7 +29,7 @@
         "#BEAF81",
         "#D99481",
     ];
-
+    //Olá
     const legendItemDetails = [
         { key: "selected", text: "Selected artist/band", color: colorPallete[0], clickable: false},
         { key: "cs", text: "Covered song from selected artist/band🖱️", color: colorPallete[1], clickable: true},
@@ -906,11 +906,11 @@
                     {#if highlightNode.gc.includes(selectedNodeId)}
                         <br>
                         <strong>Músicas de {highlightNode.n} que {nodeMap.get(selectedNodeId).n} fez cover:</strong>
-                        {nodeMap.get(selectedNodeId).cs[highlightNode.id].join(", ")}
+                        {nodeMap.get(selectedNodeId).cs[highlightNode.id][1].join(", ")}
                     {:else if highlightNode.cs.hasOwnProperty(selectedNodeId)}
                         <br>
                         <strong>Músicas de {nodeMap.get(selectedNodeId).n} que {highlightNode.n} fez cover:</strong>
-                        {highlightNode.cs[selectedNodeId].join(", ")}
+                        {highlightNode.cs[selectedNodeId][1].join(", ")}
                     {/if}
                 {/if}
             </div>

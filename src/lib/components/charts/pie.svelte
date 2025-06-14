@@ -22,8 +22,6 @@
     $: console.log(highlightArc, tooltipPos);
     $: {
         if(container){
-            rect = container.getBoundingClientRect();
-            console.log(rect);
         }
     }
 </script>
@@ -35,6 +33,7 @@
                 fill={colors(index)}
                 on:mouseenter={(event, d) => {
                     highlightArc = index;
+                    rect = container.getBoundingClientRect();
                     tooltipPos = { x: event.pageX - rect.left,
                                     y: event.pageY - rect.top };
                 }}
@@ -75,10 +74,6 @@
         opacity: 50%;
     }
 
-    path {
-        transition: 300ms;
-    }
-
     .container{
         position: relative;
         display: flex;
@@ -106,11 +101,11 @@
         z-index: 1000;
 
         transition-duration: 300ms;
-		transition-property: opacity, visibility;
-		&[hidden]:not(:hover, :focus-within) {
-			opacity: 0;
-			visibility: hidden;
-		}
+        transition-property: opacity, visibility;
+        &[hidden]:not(:hover, :focus-within) {
+            opacity: 0;
+            visibility: hidden;
+        }
     }
 
     .tooltip div,

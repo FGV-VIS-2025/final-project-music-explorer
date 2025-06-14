@@ -43,7 +43,7 @@
         [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "NaN-NaN" ? new Date(`${d[0]}-01`) : null)
         maxDate = new Date();
 
-        let current = new Date(minDate.toISOString());
+        let current = new Date(`${minDate.getFullYear()-1}-12-01`);
         dateRange = [];
         // Loop enquanto o ano/mês corrente for menor ou igual ao ano/mês da data máxima
         while (current.getFullYear() < maxDate.getFullYear() ||

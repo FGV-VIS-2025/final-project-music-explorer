@@ -70,7 +70,7 @@ for index, dictionary in tqdm(iter_in_file("tarxz/artist.tar.xz", "mbdump/artist
             "c": 0,
             "ms": set(), #members
             "im": set(), #member of
-            "cs": defaultdict(lambda: set()), #covers someone
+            "cs": defaultdict(lambda: [5000, set()]), #covers someone
             "gc": set(), #got covered by someone
         }
         for relation in dictionary["relations"]:
@@ -104,8 +104,7 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                 if relation["target-type"] == "work" and not ("cover" in relation["attributes"]):
                     work_id = relation["work"]["id"]
                     for artist_meta in track["artist-credit"]:
-                            work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
-
+                        work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
 
 for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
@@ -114,11 +113,12 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
             for artist_meta in dictionary["artist-credit"]:
                 work_map[work_id]["a"][artist_meta["artist"]["id"]] += 1 #autorship count
 
+
 for work in tqdm(work_map):
     total_sum = sum(work_map[work]["a"].values())
     true_authors = list()
     for artist, count in work_map[work]["a"].items():
-        if count/total_sum > 0.5:
+        if count/total_sum > 0.25:
             true_authors.append(artist)
             artist_map[artist]["c"] += 1 #authoral work count
     work_map[work]["a"] = true_authors
@@ -127,6 +127,7 @@ for artist in tqdm(artist_map):
     if artist_map[artist]["c"] == 0 and len(artist_map[artist]["im"]) == 0: #doenst have authoral music and isnt member of a band
         artist_map[artist]["r"] = True #mark for remotion
 
+#add cover edges
 for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/release"), total = 4774602):
     for media in dictionary.get("media", []):
         for track in media.get("tracks", []):
@@ -137,11 +138,19 @@ for index, dictionary in tqdm(iter_in_file("tarxz/release.tar.xz", "mbdump/relea
                         cover_artist = cover_artist["artist"]["id"]
                         if artist_map[cover_artist]["r"]: #doesnt add edges for artist that will be removed
                             continue
-                        for og_artist in work_map[cover_of]["a"]: #no verification here because it wont be in any work authorship by the criteriom
+                        for og_artist in work_map[cover_of]["a"]: #no verification here because it wont be in any work authorship by the criterion
                             if og_artist == cover_artist:
                                 continue
-                            artist_map[cover_artist]["cs"][og_artist].add(work_map[cover_of]["n"])
+                            date = dictionary.get("date", "5000").split("-")[0]
+                            date = int(date) if not (date in ["", "????"]) else 5000
+                            artist_map[cover_artist]["cs"][og_artist][1].add(work_map[cover_of]["n"])
+                            artist_map[cover_artist]["cs"][og_artist][0] = min(
+                                artist_map[cover_artist]["cs"][og_artist][0], #already saved cover
+                                date
+                            )
                             artist_map[og_artist]["gc"].add(cover_artist)
+
+
 
 for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/recording"), total = 133144):
     for relation in dictionary["relations"]:
@@ -154,7 +163,11 @@ for index, dictionary in tqdm(iter_in_file("tarxz/recording.tar.xz", "mbdump/rec
                 for og_artist in work_map[cover_of]["a"]:
                     if og_artist == cover_artist:
                         continue
-                    artist_map[cover_artist]["cs"][og_artist].add(work_map[cover_of]["n"])
+                    artist_map[cover_artist]["cs"][og_artist][1].add(work_map[cover_of]["n"])
+                    artist_map[cover_artist]["cs"][og_artist][0] = min(
+                        artist_map[cover_artist]["cs"][og_artist][0], #already saved cover
+                        int(dictionary.get("date", "5000").split("-")[0])#this cover date
+                    )
                     artist_map[og_artist]["gc"].add(cover_artist)
 
     # generos = dictionary.get("genres", list())
@@ -189,7 +202,9 @@ for artist in artist_map:
     new_entry["im"] = list(artist_map[artist]["im"])
     new_entry["cs"] = dict()
     for key in artist_map[artist]["cs"]:
-        new_entry["cs"][key] = list(artist_map[artist]["cs"][key])
+        new_entry["cs"][key] = []
+        new_entry["cs"][key].append(artist_map[artist]["cs"][key][0])
+        new_entry["cs"][key].append(list(artist_map[artist]["cs"][key][1]))
     new_entry["gc"] = list(artist_map[artist]["gc"])
 
     artist_map[artist] = new_entry
