@@ -14,10 +14,12 @@
     let expanding = false;
     let activeLegendItems;
 
+    //artist info sidebar related variables
     let nodeMap = new Map();
-
     let displayInfo = true;
     let infoArtist;
+    let forceHighlight;
+
     $: console.log("info:", infoArtist);
 
     $: infoDisplay = displayInfo ? "block" : "none";
@@ -39,7 +41,8 @@
              bind:expanding
              bind:nodeMap
              bind:selectedNode={infoArtist}
-             bind:activeLegendItems={activeLegendItems}/>
+             bind:activeLegendItems={activeLegendItems}
+             forceHighlight={forceHighlight}/>
 
 <button on:click={showInfo} id="display-button" style="border: none;">
     {#if displayInfo}
@@ -50,7 +53,12 @@
 </button>
              
 <div id="artist-info" style="display: {infoDisplay};">
-    <ArtistInfo artist={infoArtist} activeLegend={activeLegendItems}/>
+    <ArtistInfo artist={infoArtist}
+                activeLegend={activeLegendItems}
+                nodeMap={nodeMap}
+                expanding={expanding}
+                bind:barHighlight={forceHighlight}
+    />
 </div>
 
 

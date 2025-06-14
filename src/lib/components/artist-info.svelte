@@ -2,12 +2,14 @@
     import * as d3 from "d3";
     import { onMount } from "svelte";
     import ReleaseTimeseries from "$lib/components/charts/release-timeseries.svelte";
-    import PieChart from "$lib/components/charts/pie.svelte"
+    import PieChart from "$lib/components/charts/pie.svelte";
+    import BarChart from "$lib/components/charts/bar.svelte";
     //input of the component - artist to display info
     export let artist;
     export let nodeMap;
     export let expanding;
     export let activeLegend;
+    export let barHighlight;
     let node;
 
 
@@ -89,7 +91,41 @@
                     ["ms", activeLegend.ms ? artist.ms.length : 0],
                     ["cs", activeLegend.gc ? Object.keys(artist.cs).length : 0],
                     ["gc", activeLegend.cs ? artist.gc.length : 0]]
-            console.log(pieData);
+            console.log("artist pie", pieData);
+        }
+    }
+
+    let barData;
+    let selectedMusic;
+    $: {
+        if(artist && !expanding){
+            console.log(nodeMap);
+            if(artist.gc.length != 0) {
+                barData = {};
+                for (let coverArtist of artist.gc){
+                    if (!nodeMap.has(coverArtist)){
+                        console.warn("edge points to inexistent artist")
+                        continue //I dont expect it to never reach this case but im proofing myself and putting this in.
+                    }
+                    for (let covered of nodeMap.get(coverArtist).cs[artist.id][1]){
+                        if (covered in barData){
+                            barData[covered].push(coverArtist);
+                        } else {
+                            barData[covered] = [coverArtist];
+                        }
+                    }
+                }
+                console.log("artist bar", barData);
+            } else {
+                barData = null;
+            }
+        }
+    }
+    $: {
+        if (selectedMusic){
+            barHighlight = barData[selectedMusic];
+        } else {
+            barHighlight = null;
         }
     }
 
@@ -117,7 +153,7 @@
 {:else if !successfulSearch}
     <p>Houve um problema ao carregar as informações do artista.</p>
 {:else if searchResult}
-    <h1>{searchResult.name}</h1>
+    <h1>{artist.n}</h1>
     {#if searchResult["life-span"].ended && searchResult["life-span"].begin && searchResult["life-span"].end}
         <i>Artista ativo de {searchResult["life-span"].begin} até {searchResult["life-span"].end}.</i>
     {:else if searchResult["life-span"].begin}
@@ -132,4 +168,8 @@
 {#if pieData}
     <h4>Proporção dos tipos de relação do artista</h4>
     <PieChart data={pieData} name={artist.n}/>
+{/if}
+{#if barData}
+    <h4>Músicas de {artist.n} mais regravadas</h4>
+    <BarChart data={barData} bind:selectedMusic={selectedMusic}/>
 {/if}

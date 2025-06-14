@@ -4,13 +4,18 @@
 
     export let width = 1280;
     export let height = 720;
+
     export let importArtist = null; //Input of the component, it will receive an id, focus on it and them set it to null
     export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
+    export let forceHighlight = null;
+
+    export let nodeMap; //Map to easen getting a node object by its id
     export let expandedNodes = []; //Shared resource with other components
     export let expanding; //Shared resource with other components
     export let selectedNode = null; //Shared resource with other components
-    export let nodeMap; //Map to easen getting a node object by its id
-    export let activeLegendItems = {};
+    export let activeLegendItems = {}; //Shared resource with other components
+
+    $: console.log(forceHighlight);
 
     let svgNode;
 
@@ -465,8 +470,8 @@
                     .attr("stroke", d => {return isConnectedWith(node, d)? "#FFF" : "#000";})
                     .attr("stroke-width", d => {return isConnectedWith(node, d)? 3 : 1.5});
                 svgEdges.selectAll("line")
-                    .attr("stroke", e => {return (e.target.id == node.id || e.source.id == node.id)? "#FFF" : "#999"})
-                    .attr("stroke-width", e => {return (e.target.id == node.id || e.source.id == node.id)? 3 : 1})
+                    .attr("stroke", e => {return (e.target.id == node.id || e.source.id == node.id) ? "#FFF" : "#999"})
+                    .attr("stroke-width", e => {return (e.target.id == node.id || e.source.id == node.id) ? 3 : 1})
             } else { //reset to default values
                 nodeGs.select("circle")
                     .attr("stroke", "#000") // Ensuring stroke is applied
