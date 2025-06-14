@@ -19,11 +19,7 @@
     let container;
     let rect
     let tooltipPos = { x: 0, y: 0 };
-    $: console.log(highlightArc, tooltipPos);
-    $: {
-        if(container){
-        }
-    }
+
 </script>
 
 <div class="container" bind:this={container}>
