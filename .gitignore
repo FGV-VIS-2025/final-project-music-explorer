@@ -13,3 +13,4 @@ vite.config.ts.timestamp-*
 extras/tarxz/*
 extras/output/*.json
 static/graph*.zip
+static/graph*.tar.gz

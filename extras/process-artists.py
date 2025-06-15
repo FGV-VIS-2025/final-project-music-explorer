@@ -11,16 +11,9 @@ from pprint import pprint
 
 
 #Helper dictionaries and outputs
-filtered = list()
-filtered_rock = list()
-filtered_only_features = list()
+
 artist_map = dict()
 work_map = dict()
-
-#Counting hash tables
-counts = defaultdict(lambda: 0)
-counts_rock = defaultdict(lambda: 0)
-
 
 #It isnt possible to safely open the file with native python tools because
 #we get a buffer in which we cant use seek, and so the python standard features
