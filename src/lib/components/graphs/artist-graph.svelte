@@ -407,6 +407,9 @@
     }
     $: {
         selectedNode = nodeMap.get(selectedNodeId);
+		if (selectedNodeId) {
+			updateGraph();
+		}
     }
 
 

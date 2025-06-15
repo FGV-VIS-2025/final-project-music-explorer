@@ -141,9 +141,11 @@
         }
     })
 
+	let oldSelection = null;
     $: {
-        if(artist && mounted){
+        if (artist && mounted && (artist.id !== oldSelection)) {
             lookupArtist(artist.id);
+			oldSelection = artist.id;
         }
     }
 
