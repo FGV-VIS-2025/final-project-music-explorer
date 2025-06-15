@@ -15,7 +15,7 @@
     export let selectedNode = null; //Shared resource with other components
     export let activeLegendItems = {}; //Shared resource with other components
 
-    $: console.log(forceHighlight);
+    $: console.log("cover freq", forceHighlight);
 
     let svgNode;
 
@@ -488,6 +488,34 @@
         }
     }
 
+	$: if (expanding) {
+		forceHighlight = null;
+	}
+
+	$: handleCoverFocus(forceHighlight);
+
+    function handleCoverFocus(ids){
+        if (nodeGs && svgEdges && svgLabels) {
+            if (forceHighlight) {
+                nodeGs.select("circle")
+                    .attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0"})
+					.attr("pointer-events", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "visible" : "none"})
+                svgEdges.selectAll("line")
+                    .attr("opacity", (e) => {return (forceHighlight.includes(e.target.id) && e.source.id === selectedNodeId) ? "1" : "0"})
+				svgLabels.selectAll("text")
+					.attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0"})
+            } else { //reset to default values
+                nodeGs.select("circle")
+                    .attr("opacity", 1)
+					.attr("pointer-events", "visible")
+                svgEdges.selectAll("line")
+                    .attr("opacity", 1)
+				svgLabels.selectAll("text")
+					.attr("opacity", 1)
+            }
+        }
+    }
+
     async function toggleLegendItem(itemKey) {
         const visualOnlyLegendKeys = ['selected', 'default']
 
@@ -693,7 +721,10 @@
                     currentZoomScale = event.transform.k; // Armazena o nível de zoom
 
                     svgLabels.selectAll("text")
-                        .attr("opacity", d => {
+                        .attr("opacity", (d) => {
+							if (forceHighlight && !(forceHighlight.includes(d.id) || d.id === selectedNodeId)) {
+								return 0;
+							}
                             if (d.expanded) {
                                 return 1;
                             }
