@@ -299,7 +299,10 @@
                 </clipPath>
             </defs>
         </svg>
-        <i style="font-size: 90%;">Inclui relançamentos e edições especiais. Experimente usar o scroll do mouse, arrastar e passar o mouse em trimestres específicos.</i>
+        <i style="font-size: 90%;">
+            Inclui relançamentos e edições especiais. Experimente usar o scroll
+            do mouse, arrastar e passar o mouse em trimestres específicos.
+        </i>
 
         <div class="tooltip"
              class:hidden={highlightPoint == null}

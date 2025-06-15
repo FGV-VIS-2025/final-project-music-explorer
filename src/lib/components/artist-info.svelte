@@ -120,10 +120,12 @@
                 barData = null;
                 barHighlight = null;
             }
+        } else {
+            barHighlight = null;
         }
     }
     $: {
-        if (selectedMusic){
+        if (selectedMusic && barData){
             barHighlight = barData[selectedMusic];
         } else {
             barHighlight = null;
@@ -167,10 +169,15 @@
 
 </script>
 
-{#if searching}
+{#if !artist}
+    <p class = "loading">🛈 Carregando artista no grafo...</p>
+{:else if searching}
     <p class = "loading">🛈 Carregando informações do artista... Aguarde</p>
 {:else if !successfulSearch}
-    <p class = "error">Houve um problema ao carregar as informações do artista.</p>
+    <p class = "error">Houve um problema ao carregar as informações do artista.
+        <button on:click={evt => lookupArtist(artist)}>Tentar novamente</button>
+    </p>
+
 {:else if searchResult}
     <h1>{artist.n}</h1>
     {#if checkDate(searchResult["life-span"].begin) && checkDate(searchResult["life-span"].end)}
@@ -229,5 +236,16 @@
         border: solid 2px #ff4242;
         border-radius: 5px;
         font-size: 100%
+    }
+
+    button {
+        border: 2px solid white;
+        border-radius: 5px;
+        margin: 0.5ch;
+        margin-top: 1ch;
+        padding: 4px;
+        font-size: 90%;
+        cursor: pointer;
+        background-color: #ffffff3c
     }
 </style>

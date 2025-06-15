@@ -17,7 +17,7 @@ counts_rock = defaultdict(lambda: 0)
 genres_map = defaultdict(lambda: defaultdict(lambda: 0))
 
 
-for tar in ["tarxz/artist.tar.xz", "tarxz/work.tar.xz", "tarxz/release.tar.xz", "tarxz/recording.tar.xz"]:
+for tar in ["tarxz/release-group.tar.xz"]:
     if not (isfile(tar) and tarfile.is_tarfile(tar)):
         print(tar, "is missing! Aborting to prevent bad surprises...")
         exit()
