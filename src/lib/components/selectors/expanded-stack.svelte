@@ -8,7 +8,7 @@
 </script>
 
 <div class="container">
-    Artistas atualmente expandidos
+    <h3>Artistas atualmente expandidos</h3>
     <div id="artist-container">
     {#each expandedNodes as node, index}
         <div class:hid={index > 4}>
@@ -17,7 +17,7 @@
                 if(!expanding){
                     removeNode = node.id
                 }
-            }}>x</button>
+            }}><img src={`icons/close.svg`} height="13rem" alt="close"></button>
         </div>
     {/each}
     {#if expandedNodes.length > 5}
@@ -25,10 +25,15 @@
     {/if}
     </div>
     {#if expanding}
-        <p>expandindo agora hein</p>
+        <i stlye="font-size: 90%;">Expandindo grafo... Interação bloqueada.</i>
     {/if}
 </div>
 <style>
+    h3 {
+        margin: auto;
+        text-align: center;
+    }
+
     .container {
         position: fixed;
         bottom: 40px;

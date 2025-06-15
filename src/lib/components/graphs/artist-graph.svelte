@@ -337,10 +337,14 @@
             RemoveNodeRelations(removeArtist);
             removeArtist = null;
             expanding = false;
+            if(!selectedNodeId.expanded && expandedNodes.length > 0){
+                selectedNodeId = expandedNodes[0].id;
+                updateGraph();
+            }
         }
     }
-    let selectedNodeId;
     //Handle artist click event
+    export let selectedNodeId;
     function nodeClick(event, node){
         if(!expanding){
             expanding = true;
@@ -848,7 +852,7 @@
                     update => {
                         // Update the checkmark text (visibility) when data changes
                         update.select("rect.legend-color-checkbox")
-                        .style("fill", d => d.active ? d.color : "none");
+                        .style("fill", d => d.active ? d.color : "transparent");
                         
                         update.select("text.legend-text")
                             .style("text-decoration", d => d.active ? "none" : "line-through")
