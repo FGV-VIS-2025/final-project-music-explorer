@@ -52,12 +52,7 @@ const tweenedData = tweened(undefined, {
 $: {
     let preFilterData = data
     
-    /*
-     * Swap the values: 'cs' with 'gc' and 'ms' with 'im'
-     * This swaps both the data and the color mapping.
-     */
-
-    // Swap 'cs' with 'gc'
+    // Swap 'cs' with 'gc' for mirroring the logic in the legend
     preFilterData = preFilterData.map(([k, v]) => {
         if (k === 'cs') return ['gc', v];
         if (k === 'gc') return ['cs', v];
@@ -69,52 +64,26 @@ $: {
     // Generate the raw pie filteredData for D3
     const pie = pieGenerator(filteredData);
 
-    const previousLength = $tweenedData ? $tweenedData.length : 0;
-    const nextLength = pie.length;
-    console.log("previous length", previousLength)
-    console.log("next length", nextLength)
+    chartData = pie.map(d => {
+        const angle = midAngle(d);
+        const isRightSide = angle < Math.PI;
 
-    // The tweened store throws an error when interpolating between arrays of
-    // drastically different lengths (e.g., from 3 to 1, or 1 to 4).
-    // We detect these cases (transitioning to/from a state with 0 or 1 items)
-    // and skip the animation by setting the value directly.
-    if (
-        (previousLength > 1 && nextLength <= 1) ||
-        (previousLength <= 1 && nextLength > 1) ||
-        (previousLength == nextLength)
-    ) {
-        tweenedData.set(pie, { duration: 0 });
-    } else {
-        // For all other cases, the normal tweened animation is safe.
-        $tweenedData = pie;
-    }
-}
+        // Calculate position for the label line
+        const pos = outerArcGenerator.centroid(d);
+        pos[0] = radius * 1.15 * (isRightSide ? 1 : -1);
 
-$: {
-    // Reactive block that runs on every "frame" of the tween for smooth 
-    // transition
-    if ($tweenedData) {
-        chartData = $tweenedData.map(d => {
-            const angle = midAngle(d);
-            const isRightSide = angle < Math.PI;
-
-            // Calculate position for the label line
-            const pos = outerArcGenerator.centroid(d);
-            pos[0] = radius * 1.15 * (isRightSide ? 1 : -1);
-
-            return {
-                key: d.data[0], // Use the label as a key
-                pathD: arcGenerator(d),
-                color: colors[d.data[0]],
-                // Points for the polyline connecting slice to label
-                linePoints: [arcGenerator.centroid(d), outerArcGenerator.centroid(d), pos],
-                labelText: d.data[0],
-                // Position and anchor for the text label
-                labelTransform: `translate(${pos})`,
-                labelTextAnchor: isRightSide ? "start" : "end"
-            };
-        });
-    }
+        return {
+            key: d.data[0], // Use the label as a key
+            pathD: arcGenerator(d),
+            color: colors[d.data[0]],
+            // Points for the polyline connecting slice to label
+            linePoints: [arcGenerator.centroid(d), outerArcGenerator.centroid(d), pos],
+            labelText: d.data[0],
+            // Position and anchor for the text label
+            labelTransform: `translate(${pos})`,
+            labelTextAnchor: isRightSide ? "start" : "end"
+        };
+    });
 }
 </script>
 
@@ -235,39 +204,4 @@ $: {
     .selected {
         font-weight: bold;
     }
-
-    /* svg:has(path:hover) path:not(:hover) {
-        opacity: 50%;
-    }
-
-    path {
-        transition: 300ms;
-        cursor: pointer;
-    }
-
-    .container{
-        display: flex;
-        align-items: center;
-        gap: 0.6em;
-    }
-
-    svg:has(.selected) path:not(.selected) {
-        opacity: 50%;
-    }
-
-    .selected {
-        --color: oklch(60% 45% 0) !important;
-
-        &:is(path) {
-            fill: var(--color) !important;
-        }
-
-        &:is(li) {
-            color: var(--color);
-        }
-    }
-
-    path:hover {
-        opacity: 100% !important;
-    } */
 </style>
