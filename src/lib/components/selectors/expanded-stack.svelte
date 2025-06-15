@@ -9,9 +9,9 @@
 </script>
 
 <div class="container">
-	<h3>Artistas atualmente expandidos:</h3>
+	<h4>Artistas expandidos:</h4>
 	<div id="artist-container">
-		{#each expandedNodes as node, index}
+		{#each expandedNodes.reverse() as node, index}
 			<div
 				class="artist-wrapper"
 				class:selected={selectedNode
@@ -45,13 +45,13 @@
 		{/if}
 	</div>
 	{#if expanding}
-		<i stlye="font-size: 90%;">Expandindo grafo... Interação bloqueada.</i>
+		<!-- <i stlye="font-size: 90%;">Expandindo grafo... Interação bloqueada.</i> -->
 	{/if}
 </div>
 
 <style>
-	h3 {
-		margin: auto;
+	h4 {
+		margin-bottom: 5px;
 	}
 
 	.container {

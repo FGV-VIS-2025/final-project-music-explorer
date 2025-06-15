@@ -842,7 +842,7 @@
             if (legendGroup.empty()){
                 legendGroup = svg.append("g")
                     .attr("class", "legend")
-                    .attr("transform", "translate(20, 20)")
+                    .attr("transform", "translate(40, 40)")
             }
 
             const legendItemSelection = legendGroup.selectAll("g.legend-item")
@@ -876,7 +876,7 @@
                         .attr("x", 22 + 18 + 5) // Positioned after the color swatch, with some padding
                         .attr("y", 9) // Align with middle of checkbox/color swatch
                         .attr("dy", "0.35em") // Vertical alignment adjustment
-                        .style("font-family", "sans-serif")
+                        // .style("font-family", "sans-serif")
                         .style("font-size", "12px")
                         .style("fill", "#fff") // Text color for the legend
                         .text(d => d.text);
