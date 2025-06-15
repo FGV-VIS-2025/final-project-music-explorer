@@ -20,11 +20,38 @@ const outerArcGenerator = d3.arc().innerRadius(radius * 0.9).outerRadius(radius 
 
 
 // D3 Color Scale
-const colors = d3.scaleOrdinal()
-    .range(["#BEAF81", "#669864", "#D99481", "#BA478F", "#827E9C", "#5E8C8A"]);
+// export let colorPallete = {};
+export let colorPallete = [
+    "#EB743B",
+    "#BA478F",
+    "#669864",
+    "#BEAF81",
+    "#D99481",
+];
+let colors = {
+    "cs": colorPallete[1],
+    "ms": colorPallete[2],
+    "im": colorPallete[3],
+    "gc": colorPallete[4],
+}
 
 // Reactive calculations
 let chartData = [];
+
+/**
+ * Disable all console logs except those inside this file's scope.
+ * This overrides the global console.log, but allows logs from this file.
+ */
+const originalConsoleLog = console.log;
+console.log = function (...args) {
+    // Only log if the call stack includes this file's path
+    if (new Error().stack.includes('pie.svelte')) {
+        originalConsoleLog.apply(console, args);
+    }
+};
+
+$: console.log("data", data)
+// $: console.log("chartData", chartData)
 
 // Helper function to find the midpoint of a slice
 function midAngle(d) {
@@ -39,11 +66,13 @@ const tweenedData = tweened(undefined, {
 });
 
 $: {
-    // When the `data` prop changes, update the color domain
-    colors.domain(data.map(d => d[0]));
+    const filteredData = data.filter(d => d[1] > 0)
+    
+    // // When the `data` prop changes, filter it and update the color domain
+    // colors.domain(filteredData.map(d => d[0]));
 
-    // Generate the raw pie data for D3
-    const pie = pieGenerator(data);
+    // Generate the raw pie filteredData for D3
+    const pie = pieGenerator(filteredData);
 
     // Instead of directly setting chartData, we update the tweened store.
     // Svelte will interpolate from the old `pie` state to the new one.
@@ -65,7 +94,7 @@ $: {
             return {
                 key: d.data[0], // Use the label as a key
                 pathD: arcGenerator(d),
-                color: colors(d.data[0]),
+                color: colors[d.data[0]],
                 // Points for the polyline connecting slice to label
                 linePoints: [arcGenerator.centroid(d), outerArcGenerator.centroid(d), pos],
                 labelText: d.data[0],
@@ -177,7 +206,7 @@ $: {
     /* --- Polyline Styles --- */
     polyline {
         fill: none;
-        stroke: #444;
+        stroke: #f0f0f0;
         stroke-width: 1px;
         opacity: 0.5;
         transition: opacity 300ms ease-in-out;
@@ -187,7 +216,7 @@ $: {
     /* --- Text Label Styles --- */
     text {
         font-size: 0.7rem;
-        fill: #333;
+        fill: #fff;
         transition: opacity 300ms ease-in-out;
     }
 
