@@ -1,16 +1,20 @@
 <script>
 import * as d3 from 'd3';
-import { tweened } from 'svelte/motion';
-import { cubicOut } from 'svelte/easing';
 
 // --- Variables ---
 // Props
 export let data = [];
 export let selectedKey = null;
+export let name = 'twenty one pilots';
+
+let highlightArc;
+let container;
+let rect;
+let tooltipPos = { x: 0, y: 0};
 
 // Dimensions for the chart
 const width = 250;
-const height = 180;
+const height = 250;
 const radius = Math.min(width, height) / 2 * 0.7; // Reduce radius to make space for labels
 
 // D3 Generators
@@ -33,6 +37,12 @@ let colors = {
     "im": colorPallete[3],
     "gc": colorPallete[4],
 }
+let labels = {
+    "gc": "foi regravado",
+    "cs": "fez cover",
+    "im": "é membro",
+    "ms": "membros"
+}
 
 // Reactive calculations
 let chartData = [];
@@ -41,13 +51,6 @@ let chartData = [];
 function midAngle(d) {
     return d.startAngle + (d.endAngle - d.startAngle) / 2;
 }
-
-// Svelte's tweened store for smooth transitions
-// We tween the entire dataset that drives the chart.
-const tweenedData = tweened(undefined, {
-    duration: 750,
-    easing: cubicOut
-});
 
 $: {
     let preFilterData = data
@@ -85,9 +88,12 @@ $: {
         };
     });
 }
+
+$: if(highlightArc){console.log("highlight arc", data.find(([k]) => k === highlightArc.key)?.[1])}
+// $: console.log("highlight arc", data.find(([k]) => k[0] === highlightArc.key)?.[1])
 </script>
 
-<div class="container">
+<div class="container" bind:this={container}>
     <svg viewBox = "-{width/2} -{height/2} {width} {height}">
         <!-- Pie slices -->
         <g class="slices">
@@ -97,6 +103,15 @@ $: {
                     fill={slice.color}
                     class:selected={selectedKey === slice.key}
                     on:click={() => selectedKey = selectedKey === slice.key ? null : slice.key}
+                    on:mouseenter={(event,d) => {
+                        highlightArc = slice
+                        rect = container.getBoundingClientRect()
+                        tooltipPos = {
+                            x: event.pageX - rect.left,
+                            y: event.pageY - rect.top
+                        }
+                    }}
+                    on:mouseleave={(event, d) => {highlightArc = null}}
                 />
             {/each}
         </g>
@@ -120,17 +135,27 @@ $: {
                     dy="0.35em"
                     class:selected={selectedKey === slice.key}
                 >
-                    {slice.labelText}
+                    {labels[slice.labelText]}
                 </text>
             {/each}
         </g>
         
-        <!-- {#each arcs as arc, index}
-            <path d={arc} fill={colors(index)}
-            class:selected={selectedIndex === index}
-            on:click={e => selectedIndex = selectedIndex === index ? -1 : index} />
-        {/each} -->
     </svg>
+    <div class="tooltip">
+        {#if highlightArc != null}
+            <div style="position: absolute; top: {tooltipPos.y}px; left: {tooltipPos.x}px; transform: translate(15px, -15px);">
+                {#if highlightArc.key == "im"}
+                    {name} é/já foi membro de<strong>{data.find(([k]) => k === highlightArc.key)?.[1]}</strong> grupos.
+                {:else if highlightArc.key == "ms"}
+                    <strong>{data.find(([k]) => k === highlightArc.key)?.[1]}</strong> artistas já foram/são membros de {name}.
+                {:else if highlightArc.key == "cs"}
+                    {name} fez covers de <strong>{data.find(([k]) => k === highlightArc.key)?.[1]}</strong> artistas diferentes.
+                {:else if highlightArc.key == "gc"}
+                    <strong>{data.find(([k]) => k === highlightArc.key)?.[1]}</strong> artistas regravaram músicas de {name}.
+                {/if}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style>
@@ -139,13 +164,14 @@ $: {
         margin-block: 2em;
         /* Do not clip shapes outside the viewBox */
         overflow: visible;
-        width: 50%;
+        width: 100%;
         margin: auto;
 
         overflow: visible;
     }
 
     .container {
+        position: relative;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -172,13 +198,13 @@ $: {
 
     /* When a slice is selected, fade out unselected slices, lines, and labels */
     .container:has(.selected) .slices path:not(.selected) {
-       opacity: 0.3;
+        opacity: 0.3;
     }
     .container:has(.selected) .lines polyline:not(.selected) {
-       opacity: 0.2;
+        opacity: 0.2;
     }
     .container:has(.selected) .labels text:not(.selected) {
-       opacity: 0.4;
+        opacity: 0.4;
     }
 
 
@@ -194,7 +220,7 @@ $: {
 
     /* --- Text Label Styles --- */
     text {
-        font-size: 0.7rem;
+        font-size: 1rem;
         fill: #fff;
         transition: opacity 300ms ease-in-out;
     }
@@ -202,5 +228,34 @@ $: {
     /* --- Selected State --- */
     .selected {
         font-weight: bold;
+    }
+
+    .tooltip div {
+        max-width: 20ch;
+
+        font-size: 80%;
+        color: white;
+
+        background-color: #393939e0;
+		box-shadow: 1px 1px 2px 2px #60606050;
+
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+
+        z-index: 1000;
+
+        transition-duration: 300ms;
+        transition-property: opacity, visibility;
+        &[hidden]:not(:hover, :focus-within) {
+            opacity: 0;
+            visibility: hidden;
+        }
+    }
+
+    .tooltip div,
+    .tooltip strong{
+        fill: white;
+        color: white;
     }
 </style>
