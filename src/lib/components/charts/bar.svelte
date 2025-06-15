@@ -21,6 +21,7 @@
 	let xScale;
 	let flatData = [];
 	$: {
+		selectedIndex = -1;
 		flatData = [];
 		for(let key of Object.keys(data)){
 			flatData.push([key, data[key].length]);
