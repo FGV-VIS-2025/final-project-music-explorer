@@ -146,18 +146,43 @@
         }
     }
 
+    function checkDate(date){
+        return date && date != "" && !date.startsWith("?");
+    }
+
+    function manageDate(dateString){
+        if(dateString.length == 4){
+            return dateString
+        }
+        //If it comes here means we have a month and so we want it
+        if(dateString.length == 7){
+            dateString = dateString + "-01"
+        }
+        const options = {year: "numeric", month: "short"};
+        return new Date(dateString).toLocaleDateString("pt-BR", options);
+    }
+
 </script>
 
 {#if searching}
-    <p>Carregando informações do artista... Aguarde</p>
+    <p class = "loading">🛈 Carregando informações do artista... Aguarde</p>
 {:else if !successfulSearch}
-    <p>Houve um problema ao carregar as informações do artista.</p>
+    <p class = "error">Houve um problema ao carregar as informações do artista.</p>
 {:else if searchResult}
     <h1>{artist.n}</h1>
-    {#if searchResult["life-span"].ended && searchResult["life-span"].begin && searchResult["life-span"].end}
-        <i>Artista ativo de {searchResult["life-span"].begin} até {searchResult["life-span"].end}.</i>
-    {:else if searchResult["life-span"].begin}
-        <i>Artista ativo desde {searchResult["life-span"].begin}.</i>
+    {#if checkDate(searchResult["life-span"].begin) && checkDate(searchResult["life-span"].end)}
+        <span class="headline">
+            <i>Artista ativo de {manageDate(searchResult["life-span"].begin)}
+            até {manageDate(searchResult["life-span"].end)}.</i>
+        </span>
+    {:else if checkDate(searchResult["life-span"].begin)}
+        <span class="headline">
+            <i>Artista ativo desde {manageDate(searchResult["life-span"].begin)}.</i>
+        </span>
+    {:else if checkDate(searchResult["life-span"].end)}
+        <span class="headline">
+            <i>Artista ativo até {manageDate(searchResult["life-span"].begin)}.</i>
+        </span>
     {/if}
     {#if searchResult.genres.length > 0}
         <p>Principais gêneros musicais do artista: {searchResult.genres.map(d => d.name).join(", ")}</p>
@@ -173,3 +198,33 @@
     <h4>Músicas de {artist.n} mais regravadas</h4>
     <BarChart data={barData} bind:selectedMusic={selectedMusic}/>
 {/if}
+
+<style>
+    h1 {
+        margin: auto;
+        text-align: center;
+    }
+
+    .headline {
+        text-align: center;
+        margin-bottom: 5px;
+        margin: auto;
+    }
+
+
+    .loading{
+        background-color: #4f8285;
+        padding: 3px;
+        border: solid 2px #76bbbc;
+        border-radius: 5px;
+        font-size: 100%
+    }
+
+    .error{
+        background-color: #e43333;
+        padding: 3px;
+        border: solid 2px #ff4242;
+        border-radius: 5px;
+        font-size: 100%
+    }
+</style>
