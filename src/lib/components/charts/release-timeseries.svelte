@@ -67,6 +67,20 @@
         }
     }
 
+    function getVisibleMaxCount(xScaleZoomed) {
+        if (!dateRange || !dateGroup) return 1;
+        
+        const [domainStart, domainEnd] = xScaleZoomed.domain();
+        
+        const visibleData = dateRange.filter(dateString => {
+            const date = new Date(dateString);
+            return date >= domainStart && date <= domainEnd;
+        });
+        
+        const maxCount = d3.max(visibleData, d => getDate(d).length) || 1;
+        return Math.max(maxCount, 1);
+    }
+
     async function browseReleaseGroups(id){
         if(!searching){
             searching = true;
@@ -148,15 +162,49 @@
 
         const zoom = d3.zoom()
             .scaleExtent([1, 10])
-            // .translateExtent([[dims.left, 0], [dims.width - dims.right, dims.height]])
             .on('zoom', zoomed);
 
         d3.select(svgNode).call(zoom);
     }
 
 	function zoomed(event) {
-        xScaleZoomed = event.transform.rescaleX(xScale);
-    }
+		xScaleZoomed = event.transform.rescaleX(xScale);
+		const visibleMaxCount = getVisibleMaxCount(xScaleZoomed);
+
+		// Atualizar a escala Y global
+		yScale = d3.scaleLinear()
+			.domain([0, visibleMaxCount + 1])
+			.range([dims.height - dims.bottom, dims.top]);
+
+		d3.select(yAxis)
+			.transition()
+			.duration(300)
+			.ease(d3.easeQuadOut)
+			.call(d3.axisLeft(yScale).ticks(Math.min(visibleMaxCount + 1, 8)).tickFormat(d3.format('d')));
+
+        const svg = d3.select(svgNode);
+        
+        svg.selectAll('.chart-line')
+            .transition()
+            .duration(300)
+            .ease(d3.easeQuadOut)
+            .attr('y1', yScale(0))
+            .attr('y2', function() {
+                const dateString = d3.select(this).attr('data-date-string');
+                const count = getDate(dateString).length;
+                return yScale(count);
+            });
+        
+        svg.selectAll('.chart-circle')
+            .transition()
+            .duration(300)
+            .ease(d3.easeQuadOut)
+            .attr('cy', function() {
+                const dateString = d3.select(this).attr('data-date-string');
+                const count = getDate(dateString).length;
+                return yScale(count);
+			});
+	}
 
 </script>
 
@@ -183,22 +231,15 @@
               Quantidade de lançamentos
               </text>
         </g>
-        <!-- {#if pathDefinition}
-            <path
-                d={pathDefinition}
-                fill="none"
-                stroke="steelblue"
-                stroke-width="1.5"
-                stroke-linejoin="round"
-                stroke-linecap="round"
-            />
-        {/if} -->
+        
         <g clip-path="url(#clip)">
         {#each dateRange as dateString}
             {@const count = getDate(dateString).length}
             {#if count > 0}
                 {@const x = xScaleZoomed(new Date(dateString))}
                 <line
+                    class="chart-line"
+                    data-date-string={dateString}
                     x1={x}
                     x2={x}
                     y1={yScale(0)}
@@ -208,6 +249,8 @@
                     stroke="white"
                 />
                 <circle
+                    class="chart-circle"
+                    data-date-string={dateString}
                     cx={x}
                     cy={yScale(count)}
                     r="3"
