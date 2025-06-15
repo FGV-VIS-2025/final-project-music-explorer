@@ -4,12 +4,18 @@
 
     export let width = 1280;
     export let height = 720;
+
     export let importArtist = null; //Input of the component, it will receive an id, focus on it and them set it to null
     export let removeArtist = null; //Input of the component, it will receive an id and remove it from graph them set to null
+    export let forceHighlight = null;
+
+    export let nodeMap; //Map to easen getting a node object by its id
     export let expandedNodes = []; //Shared resource with other components
     export let expanding; //Shared resource with other components
     export let selectedNode = null; //Shared resource with other components
-    export let nodeMap; //Map to easen getting a node object by its id
+    export let activeLegendItems = {}; //Shared resource with other components
+
+    $: console.log("cover freq", forceHighlight);
 
     let svgNode;
 
@@ -28,7 +34,7 @@
         "#BEAF81",
         "#D99481",
     ];
-
+    //Olá
     const legendItemDetails = [
         { key: "selected", text: "Selected artist/band", color: colorPallete[0], clickable: false},
         { key: "cs", text: "Covered song from selected artist/band🖱️", color: colorPallete[1], clickable: true},
@@ -38,7 +44,6 @@
         { key: "default", text: "Not directly related to the selected artist/band", color: "#a0a0a0", clickable: false},
     ];
 
-    let activeLegendItems = {};
     legendItemDetails.forEach(item => {
         activeLegendItems[item.key] = true;
     });
@@ -59,6 +64,8 @@
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
     // $: console.log("selectedNodeData", nodeMap.get(selectedNodeId)); // Retained for potential debugging, uncomment if needed
 
+    $: console.log(activeLegendItems);
+
     function getNodeColor(d) {
         if (!selectedNodeId) {
             // Default color
@@ -75,24 +82,26 @@
             return colorPallete[0];
         }
 
-        // 2. If the related node has made a cover of him ("cs")
-        if (d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
-            return colorPallete[1];
-        }
+        //membership relations come first so they wont be painted with cover data
 
-        // 3. If the related node is a member ("ms")
-        if (selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
+        // 1. If the related node is a member ("ms")
+        if (activeLegendItems.ms && selectedNodeData.ms && selectedNodeData.ms.includes(d.id)) {
             return colorPallete[2];
         }
 
-        // 4. If the related node is a band the expanded node is in ("im")
-        if (selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
+        // 2. If the related node is a band the expanded node is in ("im")
+        if (activeLegendItems.im && selectedNodeData.im && selectedNodeData.im.includes(d.id)) {
             return colorPallete[3];
         }
 
-        // 5. If the related node is an artist the expanded node covered ("gc")
-        if (selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
+        // 3. If the related node is an artist the expanded node covered ("gc")
+        if (activeLegendItems.gc && selectedNodeData && d.gc && d.gc.includes(selectedNodeId)) { // Added check for d.gc
             return colorPallete[4];
+        }
+
+        // 4. If the related node has made a cover of him ("cs")
+        if (activeLegendItems.cs && d.cs && Object.keys(d.cs).includes(selectedNodeId)) {
+            return colorPallete[1];
         }
 
         // Default color for other nodes
@@ -328,10 +337,14 @@
             RemoveNodeRelations(removeArtist);
             removeArtist = null;
             expanding = false;
+            if(!selectedNodeId.expanded && expandedNodes.length > 0){
+                selectedNodeId = expandedNodes[0].id;
+                updateGraph();
+            }
         }
     }
-    let selectedNodeId;
     //Handle artist click event
+    export let selectedNodeId;
     function nodeClick(event, node){
         if(!expanding){
             expanding = true;
@@ -394,6 +407,9 @@
     }
     $: {
         selectedNode = nodeMap.get(selectedNodeId);
+		if (selectedNodeId) {
+			updateGraph();
+		}
     }
 
 
@@ -461,8 +477,8 @@
                     .attr("stroke", d => {return isConnectedWith(node, d)? "#FFF" : "#000";})
                     .attr("stroke-width", d => {return isConnectedWith(node, d)? 3 : 1.5});
                 svgEdges.selectAll("line")
-                    .attr("stroke", e => {return (e.target.id == node.id || e.source.id == node.id)? "#FFF" : "#999"})
-                    .attr("stroke-width", e => {return (e.target.id == node.id || e.source.id == node.id)? 3 : 1})
+                    .attr("stroke", e => {return (e.target.id == node.id || e.source.id == node.id) ? "#FFF" : "#999"})
+                    .attr("stroke-width", e => {return (e.target.id == node.id || e.source.id == node.id) ? 3 : 1})
             } else { //reset to default values
                 nodeGs.select("circle")
                     .attr("stroke", "#000") // Ensuring stroke is applied
@@ -472,6 +488,34 @@
                     .attr("stroke-width", 1) // Default edge color
             }
             // console.log("handled highlight change")
+        }
+    }
+
+	$: if (expanding) {
+		forceHighlight = null;
+	}
+
+	$: handleCoverFocus(forceHighlight);
+
+    function handleCoverFocus(ids){
+        if (nodeGs && svgEdges && svgLabels) {
+            if (forceHighlight) {
+                nodeGs.select("circle")
+                    .attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0.1"})
+					.attr("pointer-events", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "visible" : "none"})
+                svgEdges.selectAll("line")
+                    .attr("opacity", (e) => {return (forceHighlight.includes(e.target.id) && e.source.id === selectedNodeId) ? "1" : "0"})
+				svgLabels.selectAll("text")
+					.attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0"})
+            } else { //reset to default values
+                nodeGs.select("circle")
+                    .attr("opacity", 1)
+					.attr("pointer-events", "visible")
+                svgEdges.selectAll("line")
+                    .attr("opacity", 1)
+				svgLabels.selectAll("text")
+					.attr("opacity", 1)
+            }
         }
     }
 
@@ -680,7 +724,10 @@
                     currentZoomScale = event.transform.k; // Armazena o nível de zoom
 
                     svgLabels.selectAll("text")
-                        .attr("opacity", d => {
+                        .attr("opacity", (d) => {
+							if (forceHighlight && !(forceHighlight.includes(d.id) || d.id === selectedNodeId)) {
+								return 0;
+							}
                             if (d.expanded) {
                                 return 1;
                             }
@@ -839,7 +886,7 @@
                     update => {
                         // Update the checkmark text (visibility) when data changes
                         update.select("rect.legend-color-checkbox")
-                        .style("fill", d => d.active ? d.color : "none");
+                        .style("fill", d => d.active ? d.color : "transparent");
                         
                         update.select("text.legend-text")
                             .style("text-decoration", d => d.active ? "none" : "line-through")
@@ -902,11 +949,11 @@
                     {#if highlightNode.gc.includes(selectedNodeId)}
                         <br>
                         <strong>Músicas de {highlightNode.n} que {nodeMap.get(selectedNodeId).n} fez cover:</strong>
-                        {nodeMap.get(selectedNodeId).cs[highlightNode.id].join(", ")}
+                        {nodeMap.get(selectedNodeId).cs[highlightNode.id][1].join(", ")}
                     {:else if highlightNode.cs.hasOwnProperty(selectedNodeId)}
                         <br>
                         <strong>Músicas de {nodeMap.get(selectedNodeId).n} que {highlightNode.n} fez cover:</strong>
-                        {highlightNode.cs[selectedNodeId].join(", ")}
+                        {highlightNode.cs[selectedNodeId][1].join(", ")}
                     {/if}
                 {/if}
             </div>

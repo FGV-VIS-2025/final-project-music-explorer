@@ -137,7 +137,6 @@ $: {
     svg {
         max-width: 15em;
         margin-block: 2em;
-
         /* Do not clip shapes outside the viewBox */
         overflow: visible;
         width: 50%;
