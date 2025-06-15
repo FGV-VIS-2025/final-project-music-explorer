@@ -66,17 +66,38 @@ const tweenedData = tweened(undefined, {
 });
 
 $: {
-    const filteredData = data.filter(d => d[1] > 0)
+    let preFilterData = data
     
-    // // When the `data` prop changes, filter it and update the color domain
-    // colors.domain(filteredData.map(d => d[0]));
+    /*
+     * Swap the values: 'cs' with 'gc' and 'ms' with 'im'
+     * This swaps both the data and the color mapping.
+     */
 
+    // Swap 'cs' with 'gc'
+    preFilterData = preFilterData.map(([k, v]) => {
+        if (k === 'cs') return ['gc', v];
+        if (k === 'gc') return ['cs', v];
+        return [k, v];
+    });
+
+    const filteredData = preFilterData.filter(d => d[1] > 0)
+    
     // Generate the raw pie filteredData for D3
     const pie = pieGenerator(filteredData);
 
-    // Instead of directly setting chartData, we update the tweened store.
-    // Svelte will interpolate from the old `pie` state to the new one.
-    $tweenedData = pie;
+    const previousLength = $tweenedData ? $tweenedData.length : 0;
+    const nextLength = pie.length;
+
+    // The tweened store throws an error when interpolating between arrays of
+    // drastically different lengths (e.g., from 3 to 1, or 1 to 4).
+    // We detect these cases (transitioning to/from a state with 0 or 1 items)
+    // and skip the animation by setting the value directly.
+    if ((previousLength > 1 && nextLength <= 1) || (previousLength <= 1 && nextLength > 1)) {
+        tweenedData.set(pie, { duration: 0 });
+    } else {
+        // For all other cases, the normal tweened animation is safe.
+        $tweenedData = pie;
+    }
 }
 
 $: {
