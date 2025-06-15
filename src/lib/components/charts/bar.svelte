@@ -89,11 +89,16 @@
 
 	rect.selected {
 		stroke-width: 2;
+		opacity: 1 !important;
 	}
 
 	/* Dim others when selected */
 	svg:has(rect.selected) rect:not(.selected) {
 		opacity: 0.3;
+	}
+
+	svg:has(rect.selected) rect.hovered {
+		opacity: 1;
 	}
 
 	/* Combined hover + select */
