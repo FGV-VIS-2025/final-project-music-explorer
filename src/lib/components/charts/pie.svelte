@@ -18,7 +18,6 @@ const pieGenerator = d3.pie().value(d => d[1]).sort(null);
 const arcGenerator = d3.arc().innerRadius(0).outerRadius(radius);
 const outerArcGenerator = d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
 
-
 // D3 Color Scale
 // export let colorPallete = {};
 export let colorPallete = [
@@ -37,21 +36,6 @@ let colors = {
 
 // Reactive calculations
 let chartData = [];
-
-/**
- * Disable all console logs except those inside this file's scope.
- * This overrides the global console.log, but allows logs from this file.
- */
-const originalConsoleLog = console.log;
-console.log = function (...args) {
-    // Only log if the call stack includes this file's path
-    if (new Error().stack.includes('pie.svelte')) {
-        originalConsoleLog.apply(console, args);
-    }
-};
-
-$: console.log("data", data)
-// $: console.log("chartData", chartData)
 
 // Helper function to find the midpoint of a slice
 function midAngle(d) {
@@ -87,12 +71,18 @@ $: {
 
     const previousLength = $tweenedData ? $tweenedData.length : 0;
     const nextLength = pie.length;
+    console.log("previous length", previousLength)
+    console.log("next length", nextLength)
 
     // The tweened store throws an error when interpolating between arrays of
     // drastically different lengths (e.g., from 3 to 1, or 1 to 4).
     // We detect these cases (transitioning to/from a state with 0 or 1 items)
     // and skip the animation by setting the value directly.
-    if ((previousLength > 1 && nextLength <= 1) || (previousLength <= 1 && nextLength > 1)) {
+    if (
+        (previousLength > 1 && nextLength <= 1) ||
+        (previousLength <= 1 && nextLength > 1) ||
+        (previousLength == nextLength)
+    ) {
         tweenedData.set(pie, { duration: 0 });
     } else {
         // For all other cases, the normal tweened animation is safe.
