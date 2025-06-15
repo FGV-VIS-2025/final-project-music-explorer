@@ -498,7 +498,7 @@
         if (nodeGs && svgEdges && svgLabels) {
             if (forceHighlight) {
                 nodeGs.select("circle")
-                    .attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0"})
+                    .attr("opacity", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "1" : "0.1"})
 					.attr("pointer-events", (d) => {return (forceHighlight.includes(d.id) || d.id === selectedNodeId) ? "visible" : "none"})
                 svgEdges.selectAll("line")
                     .attr("opacity", (e) => {return (forceHighlight.includes(e.target.id) && e.source.id === selectedNodeId) ? "1" : "0"})
