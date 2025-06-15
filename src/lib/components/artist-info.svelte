@@ -118,6 +118,7 @@
                 console.log("artist bar", barData);
             } else {
                 barData = null;
+                barHighlight = null;
             }
         }
     }
@@ -194,7 +195,7 @@
     <h4>Proporção dos tipos de relação do artista</h4>
     <PieChart data={pieData} name={artist.n}/>
 {/if}
-{#if barData}
+{#if barData && !expanding}
     <h4>Músicas de {artist.n} mais regravadas</h4>
     <BarChart data={barData} bind:selectedMusic={selectedMusic}/>
 {/if}
