@@ -94,7 +94,7 @@
                 on:focus={handleInputFocus}
                 on:blur={handleInputBlur}
             />
-            <button type="submit">Buscar</button>
+            <button type="submit" class:failed={failedFinding}>Buscar</button>
         </div>
     </form>
 
@@ -195,10 +195,6 @@
 		100% { background-color: #e63704FF; }
 	}
 
-	.backgroundAnimated{
-
-}
-
 	.artistSearchBar.failed::before {
         content: "";
         position: absolute;
@@ -246,6 +242,10 @@
         z-index: 1;
         transition: background-color 0.2s ease;
     }
+
+	.artistSearchBar button.failed {
+		background-color: #e63704;
+	}
 
 	.artistSearchBar button[type="submit"]:hover {
 		background-color: #0056b3;
