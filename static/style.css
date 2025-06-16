@@ -1,16 +1,16 @@
 @font-face {
-    font-family: 'Telma';
-    src: url('fonts/Neco-Regular.woff2') format('woff2'),
-         url('fonts/Neco.woff') format('woff');
+    font-family: 'Neco';
+    src: url('fonts/neco/Neco-Regular.woff2') format('woff2'),
+         url('fonts/neco/Neco.woff') format('woff');
     font-weight: 400;
     font-style: normal;
     font-display: swap;
 }
 
 @font-face {
-    font-family: 'Telma';
-    src: url('fonts/Neco-Bold.woff2') format('woff2'),
-         url('fonts/Neco-Bold.woff') format('woff');
+    font-family: 'Neco';
+    src: url('fonts/neco/Neco-Bold.woff2') format('woff2'),
+         url('fonts/neco/Neco-Bold.woff') format('woff');
     font-weight: 700;
     font-style: normal;
     font-display: swap;
@@ -19,7 +19,7 @@
 :root {
 	--accent-black: #1F1F1F;
 	/* --accent-black: #FAEAD7; */
-	--font-color: #FFFFFF; 
+	--font-color: #FFFFE3; 
 	--border-color: #FFFFFF;
 }
 

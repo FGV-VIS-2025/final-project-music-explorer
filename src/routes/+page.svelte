@@ -10,6 +10,9 @@
 
 	import { image } from "d3";
 
+	import Histogram from "$lib/components/charts/histogram.svelte";
+	import genreYearData from "$lib/data/genres_map.json";
+
 	//Search variables
 	let searchArtist;
 
@@ -50,6 +53,11 @@
 	function handleSubmit(event) {
 		event.preventDefault();
 	}
+
+	let selectedGenre = "";
+	let genreOptions = [];
+
+	$: genreOptions = Object.keys(genreYearData);
 </script>
 
 <div id="start">
@@ -69,7 +77,7 @@
 		<a href="#graph1" class="explore"> Explorar! </a>
 
 		<a href="#graph1" class="arrow-down-dummy">
-			<img src="icons/arrow_down.svg" alt="">
+			<img src="icons/arrow_down.svg" alt="" />
 		</a>
 	</div>
 
@@ -158,6 +166,12 @@
 				<p>Carregando ou nenhum dado de gênero disponível.</p>
 			{/if}
 		</main>
+
+		<div style="position: fixed; top: 50vh;transform: translateY(-50%); right: 40px;">
+			{#if genreYearData[searchTerm]}
+				<Histogram data={genreYearData[searchTerm]} />
+			{/if}
+		</div>
 	</div>
 </div>
 
@@ -197,7 +211,7 @@
 
 	#info h1 {
 		color: #ffffe3;
-		font-family: "Telma", sans-serif;
+		font-family: "Neco", sans-serif;
 		font-size: 82pt;
 		margin: 0 0;
 	}
@@ -212,7 +226,7 @@
 	}
 
 	#info:not(:target) .arrow-down-dummy {
-		display: none;	
+		display: none;
 	}
 
 	.arrow-down-dummy {
