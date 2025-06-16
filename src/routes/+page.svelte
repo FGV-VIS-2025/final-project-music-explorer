@@ -3,6 +3,11 @@
 	import SearchArtist from "$lib/components/selectors/get-artist.svelte";
 	import ExpandedStack from "$lib/components/selectors/expanded-stack.svelte";
 	import ArtistInfo from "$lib/components/artist-info.svelte";
+
+	import CollapsibleTree from "$lib/components/graphs/genres-tree.svelte";
+	import rawData from "$lib/data/genres.json";
+	import { getHighlightedPathForGenreTree } from "$lib/utils/genreTreeUtils";
+
 	import { image } from "d3";
 
 	//Search variables
@@ -27,6 +32,24 @@
 	function showInfo() {
 		displayInfo = !displayInfo;
 	}
+
+	let searchTerm = "";
+	let hierarchicalData;
+	let highlightedNodeNames = new Set();
+
+	$: {
+		const {
+			hierarchicalData: newHierarchy,
+			highlightedNames: newHighlightedNames,
+		} = getHighlightedPathForGenreTree(rawData, searchTerm);
+
+		hierarchicalData = newHierarchy;
+		highlightedNodeNames = newHighlightedNames;
+	}
+
+	function handleSubmit(event) {
+		event.preventDefault();
+	}
 </script>
 
 <div id="start">
@@ -50,7 +73,7 @@
 		<a href="#info" class="arrow-up">
 			<img src="icons/arrow_up.svg" alt="" />
 		</a>
-		<a href="#info" class="arrow-down">
+		<a href="#graph2" class="arrow-down">
 			<img src="icons/arrow_down.svg" alt="" />
 		</a>
 		<div id="search-bar">
@@ -96,6 +119,41 @@
 				bind:barHighlight={forceHighlight}
 			/>
 		</div>
+	</div>
+
+	<div id="graph2">
+		<a href="#graph1" class="arrow-up">
+			<img src="icons/arrow_up.svg" alt="" />
+		</a>
+		<a href="#info" class="arrow-down">
+			<img src="icons/arrow_upward.svg" alt="" />
+		</a>
+
+		<div class="container">
+			<form on:submit={handleSubmit}>
+				<div class="artistSearchBar">
+					<input
+						id="cityInput"
+						type="text"
+						bind:value={searchTerm}
+						required
+						placeholder="Busque por um gênero"
+					/>
+					<button type="submit">Buscar</button>
+				</div>
+			</form>
+		</div>
+
+		<main>
+			{#if hierarchicalData}
+				<CollapsibleTree
+					data={hierarchicalData}
+					highlightedNames={highlightedNodeNames}
+				/>
+			{:else}
+				<p>Carregando ou nenhum dado de gênero disponível.</p>
+			{/if}
+		</main>
 	</div>
 </div>
 
@@ -176,7 +234,8 @@
 		filter: invert(1);
 	}
 
-	#graph1 {
+	#graph1,
+	#graph2 {
 		display: block;
 		position: relative;
 		box-sizing: border-box;
@@ -185,9 +244,14 @@
 		transition: filter cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s;
 	}
 
-	#graph1:target {
+	#graph1:target,
+	#graph2:target {
 		filter: none;
 		pointer-events: all;
+	}
+
+	#graph2 {
+		box-sizing: border-box;
 	}
 
 	#chart-selector {
@@ -283,4 +347,66 @@
 		left: 40px;
 		bottom: 40px;
 	}
+
+	.container {
+		position: fixed;
+		top: 40px;
+		right: 40px;
+		z-index: 1000;
+
+		width: 90%;
+		max-width: 500px;
+		box-sizing: border-box;
+	}
+
+	.artistSearchBar {
+		display: flex;
+		width: 100%;
+		position: relative;
+		background-color: rgba(100, 100, 100, 0.6);
+		box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.artistSearchBar input {
+		flex-grow: 1;
+		padding: 12px 15px;
+		border: none;
+		border-radius: 6px 0 0 6px;
+		background-color: var(--accent-black);
+		color: white;
+		font-size: 1rem;
+		position: relative;
+		z-index: 1;
+	}
+
+	.artistSearchBar input:focus {
+		outline: #0056b3;
+	}
+
+	.artistSearchBar button[type="submit"] {
+		padding: 0 18px;
+		color: white;
+		background-color: #007bff;
+		border: none;
+		border-radius: 0 6px 6px 0;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1rem;
+		font-weight: bold;
+		position: relative;
+		z-index: 1;
+		transition: background-color 0.2s ease;
+	}
+
+	.artistSearchBar button[type="submit"]:hover {
+		background-color: #0056b3;
+	}
+
+	/* main { */
+	/* 	background-color: var(--accent-black); */
+	/* } */
 </style>
