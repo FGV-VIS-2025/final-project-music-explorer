@@ -56,9 +56,14 @@
 	}
 
 	let selectedGenre = "";
+	let clickedGenre = "";
 	let genreOptions = [];
 
 	$: genreOptions = Object.keys(genreYearData);
+
+	$: if (clickedGenre) {
+		searchTerm = clickedGenre;
+	};
 </script>
 
 <div id="start">
@@ -132,6 +137,7 @@
 				{nodeMap}
 				{expanding}
 				bind:barHighlight={forceHighlight}
+				bind:clickedGenre={clickedGenre}
 			/>
 		</div>
 	</div>
@@ -141,7 +147,7 @@
 			<img src="icons/arrow_up.svg" alt="" />
 		</a>
 		<a href="#info" class="arrow-down">
-			<img src="icons/arrow_upward.svg" alt="" />
+			<img src="icons/home.svg" alt="" />
 		</a>
 
 		<div class="container">
@@ -285,6 +291,7 @@
 
 	#graph2 {
 		box-sizing: border-box;
+		background-color: var(--accent-black);
 	}
 
 	#chart-selector {

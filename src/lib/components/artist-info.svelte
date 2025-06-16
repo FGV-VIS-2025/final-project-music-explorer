@@ -10,6 +10,7 @@
     export let expanding;
     export let activeLegend;
     export let barHighlight;
+	export let clickedGenre;
     let node;
 
 
@@ -193,9 +194,18 @@
         </span>
     {/if}
     {#if searchResult.genres.length > 0}
-        <p>Principais gêneros musicais do artista: {searchResult.genres.map(d => d.name).join(", ")}</p>
+		<p style="font-weight: bold;">Principais gêneros musicais do artista:</p>
+		<div id="tags-container">
+			{#each searchResult.genres as genre}
+		<div class="genre-tag">
+					<a href="#graph2" on:click={() => {clickedGenre=genre.name;}}>	
+						{genre.name}
+					</a>
+				</div>
+			{/each}
+		</div>
     {/if}
-    <h4>Histórico de lançamentos (álbuns, EPs e Singles)</h4>
+    <h4 style="clear: both;">Histórico de lançamentos (álbuns, EPs e Singles)</h4>
     <ReleaseTimeseries bind:artistId={artist.id}/>
 {/if}
 {#if pieData}
@@ -208,9 +218,29 @@
 {/if}
 
 <style>
+	.genre-tag a {
+		/* color: var(--accent-black); */
+		background-color: #444;
+		text-decoration: none;
+		font-size: 14px;
+		border-radius: 4px;
+		padding: 2px;
+		/* font-weight: bold; */
+	}
+
+	.genre-tag:hover a {
+		background-color: white;
+		color: var(--accent-black);
+	}
+
+	#tags-container {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
     h1 {
         margin: auto;
-        text-align: center;
     }
 
     .headline {
