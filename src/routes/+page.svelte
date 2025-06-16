@@ -56,14 +56,11 @@
 		event.preventDefault();
 	}
 
-	let selectedGenre = "";
 	let clickedGenre = "";
 
 	let genreOptions = [];
 
 	$: genreOptions = Object.keys(genreYearData);
-
-	$: console.log("AAAAAAAAAAAAAAAAA", clickedGenre);
 
 	$: if (clickedGenre) {
 		searchTerm = clickedGenre;
