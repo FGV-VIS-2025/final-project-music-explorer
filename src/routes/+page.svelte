@@ -57,15 +57,40 @@
 	}
 
 	let clickedGenre = "";
-
+	let treeClickedGenre = "";
+	let histogramGenre = "";
 	let genreOptions = [];
+	let genreSearch = [];
 
 	$: genreOptions = Object.keys(genreYearData);
 
 	$: if (clickedGenre) {
 		searchTerm = clickedGenre;
+		histogramGenre = clickedGenre;
 	};
 
+	$: {
+		console.log(treeClickedGenre);
+		if (treeClickedGenre){
+			histogramGenre = treeClickedGenre;
+		}
+	}
+
+	$: {
+		if(searchTerm != ""){
+			if(genreOptions.includes(searchTerm)){
+				histogramGenre = searchTerm;
+				genreSearch = [];
+			} else {
+				genreSearch = genreOptions.filter(key => key.includes(searchTerm));
+				if(genreSearch.length == 1){
+					histogramGenre = genreSearch[0]
+				}
+			}
+		} else {
+			genreSearch = [];
+		}
+	}
 
 	const defaultTargetId = 'info';
 
@@ -163,7 +188,7 @@
 		</a>
 
 		<div class="container">
-			<form on:submit={handleSubmit}>
+			<form on:submit={handleSubmit} autocomplete="off">
 				<div class="artistSearchBar">
 					<input
 						id="cityInput"
@@ -172,9 +197,20 @@
 						required
 						placeholder="Busque por um gênero"
 					/>
-					<button type="submit">Buscar</button>
 				</div>
 			</form>
+			{#if genreSearch.length > 1}
+				<div class="results">
+				{#each genreSearch as result, index}
+					<button
+						class="searchResult"
+						on:click={(evt) => {searchTerm = result;}}
+					>
+						{result}
+					</button>
+				{/each}
+				</div>
+			{/if}
 		</div>
 
 		<main>
@@ -182,6 +218,7 @@
 				<CollapsibleTree
 					data={hierarchicalData}
 					highlightedNames={highlightedNodeNames}
+					bind:clickedGenre={treeClickedGenre}
 				/>
 			{:else}
 				<p>Carregando ou nenhum dado de gênero disponível.</p>
@@ -189,8 +226,20 @@
 		</main>
 
 		<div style="position: fixed; top: 50vh;transform: translateY(-50%); right: 40px;">
-			{#if genreYearData[searchTerm]}
-				<Histogram data={genreYearData[searchTerm]} />
+			{#if histogramGenre && genreYearData[histogramGenre]}
+				<h4 style="text-align: center;">Histograma de lançamentos com o gênero {histogramGenre}.</h4>
+				<Histogram data={genreYearData[histogramGenre]} /><br>
+				<i style="text-size: 90%; text-align: right">
+					Explore a árvore clicando em seus nós.
+				</i>
+			{:else if histogramGenre}
+				<h4>Sem informações de lançamento para o gênero {histogramGenre}</h4>
+			{:else}
+				<p style = "max-width: 60ch; text-align: center;">
+					Experimente clicar em um gênero das informações de um artista do
+					grafo ou fazer uma busca na barra acima. Você também pode explorar
+					a árvore clicando em seus nós!
+				</p>
 			{/if}
 		</div>
 	</div>
@@ -456,6 +505,42 @@
 
 	.artistSearchBar button[type="submit"]:hover {
 		background-color: #0056b3;
+	}
+
+	    .results {
+		position: relative;
+        overflow-y: auto;
+        max-height: 200px;
+        padding: 5px;
+        margin-top: 10px;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+        z-index: 1000;
+    }
+
+    .searchResult {
+        display: block;
+        width: 100%;
+        padding: 12px 15px;
+        text-align: left;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 0.95rem;
+        color: #333;
+        transition: background-color 0.15s ease;
+        z-index: 1000;
+    }
+
+	.searchResult:last-child {
+		border-bottom: none;
+	}
+
+    .searchResult:hover,
+	.searchResult:focus {
+		background-color: #e9e9e9;
+		border-radius: 4px;
 	}
 
 	/* main { */

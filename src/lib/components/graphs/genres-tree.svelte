@@ -4,6 +4,7 @@
 
     export let data;
     export let highlightedNames = new Set();
+    export let clickedGenre;
 
     const width = 928;
     const marginTop = 100;
@@ -22,6 +23,8 @@
     let svg;
     let gLink;
     let gNode;
+
+
 
     let currentData;
     let previousHighlightedNames = new Set();
@@ -353,6 +356,7 @@
                 } else if (d._children) {
                     d.children = d._children;
                 }
+                clickedGenre = d.data.name;
                 update(event, d);
             });
 
