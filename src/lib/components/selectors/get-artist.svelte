@@ -123,14 +123,14 @@
 
 <style>
 	.container {
-		position: fixed;
-		top: 40px;
-		right: 40px;
+		/* position: fixed; */
+		/* top: 40px; */
+		/* right: 40px; */
 		/* transform: translateX(-50%); */
 		z-index: 1000;
 
-		width: 90%;
-		max-width: 500px;
+		/* width: 90%; */
+		/* max-width: 500px; */
 		box-sizing: border-box;
 	}
 

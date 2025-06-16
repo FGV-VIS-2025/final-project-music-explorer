@@ -11,7 +11,7 @@
 <div class="container">
 	<h4>Artistas expandidos:</h4>
 	<div id="artist-container">
-		{#each expandedNodes.reverse() as node, index}
+		{#each expandedNodes as node, index}
 			<div
 				class="artist-wrapper"
 				class:selected={selectedNode
@@ -55,9 +55,9 @@
 	}
 
 	.container {
-		position: fixed;
-		bottom: 40px;
-		left: 40px;
+		/* position: fixed; */
+		/* bottom: 40px; */
+		/* left: 40px; */
 		/* transform: translateX(-50%); */
 		z-index: 1000;
 
@@ -67,9 +67,9 @@
 		/**/
 		/* padding: 10px; */
 		/* box-shadow: 0 0px 5px rgba(256, 256, 256, 0.25); */
-		width: 90%;
-		max-width: 400px;
-		/* box-sizing: border-box; */
+		/* width: 90%; */
+		/* max-width: 400px; */
+		box-sizing: border-box;
 	}
 
 	* {
