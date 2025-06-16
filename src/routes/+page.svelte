@@ -66,7 +66,11 @@
 			dolore dolorum nam ad accusamus velit accusantium ratione.
 		</p>
 
-		<a href="#graph1"> Explorar! </a>
+		<a href="#graph1" class="explore"> Explorar! </a>
+
+		<a href="#graph1" class="arrow-down-dummy">
+			<img src="icons/arrow_down.svg" alt="">
+		</a>
 	</div>
 
 	<div id="graph1">
@@ -198,13 +202,22 @@
 		margin: 0 0;
 	}
 
-	#info a {
+	#info .explore {
 		background-color: white;
 		padding: 5px;
 		border-radius: 2px;
 		color: black;
 		font-weight: bolder;
 		text-decoration: none;
+	}
+
+	#info:not(:target) .arrow-down-dummy {
+		display: none;	
+	}
+
+	.arrow-down-dummy {
+		filter: invert(1);
+		z-index: 999 !important;
 	}
 
 	.arrow-up {
@@ -215,6 +228,7 @@
 		transform: translateX(-50%);
 	}
 
+	.arrow-down-dummy,
 	.arrow-down {
 		background-color: var(--accent-black);
 		border-radius: 6px 6px 0 0;
@@ -224,6 +238,7 @@
 		transform: translateX(-50%);
 	}
 
+	.arrow-down-dummy img,
 	.arrow-down img,
 	.arrow-up img {
 		display: block;
@@ -232,6 +247,7 @@
 	.arrow-down:hover,
 	.arrow-up:hover {
 		filter: invert(1);
+		z-index: 999;
 	}
 
 	#graph1,
