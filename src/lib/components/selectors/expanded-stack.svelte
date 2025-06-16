@@ -68,7 +68,7 @@
 		/* padding: 10px; */
 		/* box-shadow: 0 0px 5px rgba(256, 256, 256, 0.25); */
 		/* width: 90%; */
-		/* max-width: 400px; */
+		max-width: 400px;
 		box-sizing: border-box;
 	}
 
