@@ -9,6 +9,7 @@
 	import { getHighlightedPathForGenreTree } from "$lib/utils/genreTreeUtils";
 
 	import { image } from "d3";
+	import { onMount } from 'svelte';
 
 	import Histogram from "$lib/components/charts/histogram.svelte";
 	import genreYearData from "$lib/data/genres_map.json";
@@ -57,13 +58,27 @@
 
 	let selectedGenre = "";
 	let clickedGenre = "";
+
 	let genreOptions = [];
 
 	$: genreOptions = Object.keys(genreYearData);
 
+	$: console.log("AAAAAAAAAAAAAAAAA", clickedGenre);
+
 	$: if (clickedGenre) {
 		searchTerm = clickedGenre;
 	};
+
+
+	const defaultTargetId = 'info';
+
+	onMount(() => {
+		window.location.hash = defaultTargetId;
+		const targetElement = document.getElementById(defaultTargetId);
+		if (targetElement) {
+			targetElement.scrollIntoView({ behavior: 'smooth' });
+		}
+	});
 </script>
 
 <div id="start">
