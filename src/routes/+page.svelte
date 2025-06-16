@@ -227,7 +227,7 @@
 
 		<div style="position: fixed; top: 50vh;transform: translateY(-50%); right: 40px;">
 			{#if histogramGenre && genreYearData[histogramGenre]}
-				<h4 style="text-align: center;">Histograma de lançamentos com o gênero {histogramGenre}.</h4>
+				<h4>Histograma de lançamentos com o gênero {histogramGenre}.</h4>
 				<Histogram data={genreYearData[histogramGenre]} /><br>
 				<i style="text-size: 90%; text-align: right">
 					Explore a árvore clicando em seus nós.
