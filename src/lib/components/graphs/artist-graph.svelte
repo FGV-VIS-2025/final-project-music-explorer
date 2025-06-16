@@ -35,13 +35,13 @@
         "#D99481",
     ];
     //Olá
-    const legendItemDetails = [
-        { key: "selected", text: "Selected artist/band", color: colorPallete[0], clickable: false},
-        { key: "cs", text: "Covered song from selected artist/band🖱️", color: colorPallete[1], clickable: true},
-        { key: "ms", text: "Member of selected band🖱️", color: colorPallete[2], clickable: true},
-        { key: "im", text: "Band selected artist is Member Of🖱️", color: colorPallete[3], clickable: true},
-        { key: "gc", text: "Artist/band Covered by selected artist/band🖱️", color: colorPallete[4], clickable: true},
-        { key: "default", text: "Not directly related to the selected artist/band", color: "#a0a0a0", clickable: false},
+    let legendItemDetails = [
+        { key: "selected", text: "Artista/banda selecionado", color: colorPallete[0], clickable: false},
+        { key: "cs", text: "Fez uma regravação de uma música do artista/banda selecionado 🖱️", color: colorPallete[1], clickable: true},
+        { key: "ms", text: "Membros da banda selecionada 🖱️", color: colorPallete[2], clickable: true},
+        { key: "im", text: "Bandas que o artista selecionado fez/faz parte🖱️", color: colorPallete[3], clickable: true},
+        { key: "gc", text: "Teve uma música regravada pelo artista/banda selecionado🖱️", color: colorPallete[4], clickable: true},
+        { key: "default", text: "Não relacionado com o artist/banda selecionado", color: "#a0a0a0", clickable: false},
     ];
 
     legendItemDetails.forEach(item => {

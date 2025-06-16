@@ -32,30 +32,38 @@
         dateGroup = d3.group(results, r => {
             try {
                 const date = new Date(r["first-release-date"]);
-                const year = date.getFullYear()
-                const quarter = String(
-                    Math.floor((date.getMonth() + 1)/ 3) * 3
-                ).padStart(2, "0");
-                return `${year}-${quarter}`;
+                const year = date.getUTCFullYear()
+                // const quarter = String(
+                //     Math.floor((date.getMonth() + 1)/ 3) * 3
+                // ).padStart(2, "0");
+                // return `${year}-${quarter}`;
+                return `${year}`
             } catch (error) {
                 return "na";
             }
         });
         console.log(dateGroup);
-        [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "NaN-NaN" ? new Date(`${d[0]}-01`) : null)
+        [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "NaN-NaN" ? new Date(`${d[0]}-01-01`) : null)
         maxDate = new Date();
 
-        let current = new Date(`${minDate.getFullYear()-1}-12-01`);
-        dateRange = [];
-        // Loop enquanto o ano/mês corrente for menor ou igual ao ano/mês da data máxima
-        while (current.getFullYear() < maxDate.getFullYear() ||
-            (current.getFullYear() === maxDate.getFullYear() &&
-            current.getMonth() <= maxDate.getMonth())){
-
-            dateRange.push(current.toISOString().slice(0, 7));
-
-            // Avança para o próximo mês
-            current.setMonth(current.getMonth() + 3);
+        // let current = new Date(`${minDate.getFullYear()-1}-12-01`);
+        // dateRange = [];
+        // // Loop enquanto o ano/mês corrente for menor ou igual ao ano/mês da data máxima
+        // while (current.getFullYear() < maxDate.getFullYear() ||
+        //     (current.getFullYear() === maxDate.getFullYear() &&
+        //     current.getMonth() <= maxDate.getMonth())){
+        //
+        //     dateRange.push(current.toISOString().slice(0, 7));
+        //
+        //     // Avança para o próximo mês
+        //     current.setMonth(current.getMonth() + 6);
+        // }
+        // dateRange = [...dateRange];
+        // console.log(dateRange);
+        let current = minDate.getUTCFullYear() - 2;
+        while (current <= maxDate.getUTCFullYear()){
+            dateRange.push(`${current}`);
+            current += 1;
         }
         dateRange = [...dateRange];
         console.log(dateRange);
@@ -132,13 +140,13 @@
     let xScale, yScale;
 	let xScaleZoomed;
     let xAxis, yAxis;
-
+    let highZoom = false;
 	$: {
 		if (dateGroup && minDate && maxDate) {
             const startYear = new Date(minDate);
-            const maxCount = d3.max(dateRange, d => getDate(d).length) || 1;
+            const maxCount = (d3.max(dateRange, d => getDate(d).length) + 1 )|| 1;
 
-            startYear.setFullYear(startYear.getFullYear());
+            startYear.setFullYear(startYear.getFullYear() - 1);
 
             xScale = d3.scaleTime()
 							.domain([startYear, maxDate])
@@ -152,7 +160,7 @@
                 xScaleZoomed = xScale;
             }
 
-			d3.select(xAxis).call(d3.axisBottom(xScaleZoomed).ticks(8).tickFormat(d3.timeFormat("%Y")));
+			d3.select(xAxis).call(d3.axisBottom(xScaleZoomed).ticks(highZoom ? 4 : 8).tickFormat(d3.timeFormat("%Y")));
             d3.select(yAxis).call(d3.axisLeft(yScale).ticks(Math.min(maxCount, 8)).tickFormat(d3.format('d')));
 
 			setupZoom();
@@ -206,6 +214,16 @@
                 const count = getDate(dateString).length;
                 return yScale(count);
 			});
+
+        const [startDate, endDate] = xScaleZoomed.domain();
+        const visibleDuration = endDate.getTime() - startDate.getTime();
+        const ONE_YEAR_IN_MS = 365 * 24 * 60 * 60 * 1000;
+        const THREE_MONTHS_IN_MS = ONE_YEAR_IN_MS / 4;
+        if(visibleDuration < ONE_YEAR_IN_MS * 3.3) {
+            highZoom = true;
+        } else {
+            highZoom = false;
+        }
 	}
 
     let highlightPoint;
@@ -246,7 +264,7 @@
             <text x={dims.width/2 + dims.left}
                 y={dims.bottom - 3}
                 fill="currentcolor"
-                text-anchor="end">Trimestre</text>
+                text-anchor="end">Ano</text>
             </g>
             <g transform = "translate({dims.left}, 0)" bind:this={yAxis}>
             <text x={-dims.left}
@@ -301,7 +319,7 @@
         </svg>
         <i style="font-size: 90%;">
             Inclui relançamentos e edições especiais. Experimente usar o scroll
-            do mouse, arrastar e passar o mouse em trimestres específicos.
+            do mouse, arrastar e passar o mouse em pontos específicos.
         </i>
 
         <div class="tooltip"
