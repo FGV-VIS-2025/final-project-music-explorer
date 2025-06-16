@@ -42,7 +42,7 @@
                 return "na";
             }
         });
-        console.log(dateGroup);
+//        console.log(dateGroup);
         [minDate, maxDate] = d3.extent(dateGroup, d => d[0] != "NaN-NaN" ? new Date(`${d[0]}-01-01`) : null)
         maxDate = new Date();
 
@@ -66,7 +66,7 @@
             current += 1;
         }
         dateRange = [...dateRange];
-        console.log(dateRange);
+//        console.log(dateRange);
     }
 
     function getDate(date){
@@ -113,7 +113,7 @@
                     data = await response.json();
                     searchResults = [...searchResults, ...data["release-groups"]];
                 }
-                console.log(searchResults);
+//                console.log(searchResults);
                 processDates(searchResults);
                 successfulSearch = true;
                 searching = false;
@@ -160,7 +160,7 @@
                 xScaleZoomed = xScale;
             }
 
-			d3.select(xAxis).call(d3.axisBottom(xScaleZoomed).ticks(highZoom ? 4 : 8).tickFormat(d3.timeFormat("%Y")));
+			d3.select(xAxis).call(d3.axisBottom(xScaleZoomed).ticks(highZoom ? d3.timeYear : 8).tickFormat(d3.timeFormat("%Y")));
             d3.select(yAxis).call(d3.axisLeft(yScale).ticks(Math.min(maxCount, 8)).tickFormat(d3.format('d')));
 
 			setupZoom();
@@ -219,7 +219,7 @@
         const visibleDuration = endDate.getTime() - startDate.getTime();
         const ONE_YEAR_IN_MS = 365 * 24 * 60 * 60 * 1000;
         const THREE_MONTHS_IN_MS = ONE_YEAR_IN_MS / 4;
-        if(visibleDuration < ONE_YEAR_IN_MS * 3.3) {
+        if(visibleDuration < ONE_YEAR_IN_MS * 3.5) {
             highZoom = true;
         } else {
             highZoom = false;
@@ -237,10 +237,10 @@
             highlightPoint = index;
             //cursor = {x: evt.x, y: evt.y};
             tooltipPos = await computePosition(hoveredElement, tooltip, {
-                strategy: "absolute", // because we use position: fixed
+                strategy: "absolute",
                 middleware: [
-                    offset(5), // spacing from tooltip to dot
-                    autoPlacement() // see https://floating-ui.com/docs/autoplacement
+                    offset(5),
+                    autoPlacement()
                 ],
             });        }
         else if (evt.type === "mouseleave") {

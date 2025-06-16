@@ -13,8 +13,6 @@
     let node;
 
 
-    $: console.log(nodeMap);
-
     let searching = false;
 	let successfulRequest = false;
 	let successfulSearch = false;
@@ -32,7 +30,7 @@
             fetch(link)
                 .then((response) => response.json())
                 .then((data) => {
-                    console.log(data);
+//                    console.log(data);
                     searchResult = data;
                     successfulRequest = true;
                     successfulSearch = true;
@@ -59,7 +57,7 @@
                     throw new Error(`Erro HTTP, status ${response.status}`);
                 }
                 let data = await response.json();
-                console.log(data);
+                //console.log(data);
                 searchResult = data.works;
                 while (data["work-count"] > offset + 25){
                     offset += 25;
@@ -68,10 +66,10 @@
                         throw new Error(`Erro HTTP, status ${response.status}`);
                     }
                     data = await response.json();
-                    console.log(data);
+                //    console.log(data);
                     searchResult = [...searchResult, ...data.works];
                 }
-                console.log(searchResult);
+                //console.log(searchResult);
                 successfulSearch = true;
                 successfulSearch = true;
             } catch (error) {
@@ -86,12 +84,12 @@
     let pieData;
     $: {
         if(artist){
-            console.log(nodeMap);
+            //console.log(nodeMap);
             pieData = [["im", activeLegend.im ? artist.im.length: 0],
                     ["ms", activeLegend.ms ? artist.ms.length : 0],
                     ["cs", activeLegend.gc ? Object.keys(artist.cs).length : 0],
                     ["gc", activeLegend.cs ? artist.gc.length : 0]]
-            console.log("artist pie", pieData);
+            //console.log("artist pie", pieData);
         }
     }
 
@@ -99,12 +97,12 @@
     let selectedMusic;
     $: {
         if(artist && !expanding){
-            console.log(nodeMap);
+            //console.log(nodeMap);
             if(artist.gc.length != 0) {
                 barData = {};
                 for (let coverArtist of artist.gc){
                     if (!nodeMap.has(coverArtist)){
-                        console.warn("edge points to inexistent artist")
+                        console.warn("Tried to point to inexistent artist while getting cover artists")
                         continue //I dont expect it to never reach this case but im proofing myself and putting this in.
                     }
                     for (let covered of nodeMap.get(coverArtist).cs[artist.id][1]){
@@ -115,7 +113,7 @@
                         }
                     }
                 }
-                console.log("artist bar", barData);
+                //console.log("artist bar", barData);
             } else {
                 barData = null;
                 barHighlight = null;

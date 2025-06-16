@@ -12,6 +12,7 @@
 
 	//Search variables
 	let searchArtist;
+	let failedFinding;
 
 	//Expansion control variables
 	let expandedNodes = [];
@@ -84,6 +85,7 @@
 			<SearchArtist
 				bind:artistId={searchArtist}
 				bind:searching={expanding}
+				bind:failedFinding
 			/>
 		</div>
 		<div id="expanded-stack">
@@ -103,6 +105,7 @@
 			bind:selectedNode={infoArtist}
 			bind:activeLegendItems
 			{forceHighlight}
+			bind:failedFinding
 			selectedNodeId={infoArtist ? infoArtist.id : null}
 		/>
 
@@ -342,7 +345,7 @@
 		top: 120px;
 		bottom: 40px;
 		right: 40px;
-		z-index: 999;
+		z-index: 900;
 
 		background-color: var(--accent-black);
 		border-radius: 8px;

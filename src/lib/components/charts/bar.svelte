@@ -66,7 +66,7 @@
 			fill="white"
 			text-anchor="end"
 		>
-			{i}ª
+			{i + 1}ª
 		</text>
 	{/each}
 </svg>

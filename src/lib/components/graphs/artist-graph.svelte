@@ -14,8 +14,9 @@
     export let expanding; //Shared resource with other components
     export let selectedNode = null; //Shared resource with other components
     export let activeLegendItems = {}; //Shared resource with other components
+    export let failedFinding = null;
 
-    $: console.log("cover freq", forceHighlight);
+    //$: console.log("cover freq", forceHighlight);
 
     let svgNode;
 
@@ -64,7 +65,7 @@
     // $: console.log("selectedNodeId", selectedNodeId); // Retained for potential debugging, uncomment if needed
     // $: console.log("selectedNodeData", nodeMap.get(selectedNodeId)); // Retained for potential debugging, uncomment if needed
 
-    $: console.log(activeLegendItems);
+    //$: console.log(activeLegendItems);
 
     function getNodeColor(d) {
         if (!selectedNodeId) {
@@ -312,6 +313,7 @@
                     } else { // Handle case where node couldn't be added
                         importArtist = null;
                         expanding = false;
+                        failedFinding = true;
                     }
                 });
             } else if(!nodeMap.get(importArtist).expanded) {
@@ -349,14 +351,7 @@
         if(!expanding){
             expanding = true;
             
-            // Optional: If you want to collapse previously selected node when a new one is clicked
-            // if (selectedNodeId && selectedNodeId !== node.id && nodeMap.has(selectedNodeId)) {
-            //     const previouslySelectedNode = nodeMap.get(selectedNodeId);
-            //     if (previouslySelectedNode) previouslySelectedNode.expanded = false;
-            //      // Optionally, remove edges related to the previously selected node if desired
-            // }
-
-            console.log("Clicked node", node)
+            //console.log("Clicked node", node)
             selectedNodeId = node.id;
 
             if (node.expanded){

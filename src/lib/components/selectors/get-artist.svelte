@@ -2,6 +2,7 @@
 	//Output of the component - an id of a selected artist
 	export let artistId;
 	export let searching = false;
+	export let failedFinding;
 	//Shared resource - lock when graph is expanding
 
 	//To get what the user typed
@@ -26,9 +27,9 @@
 			.then((data) => {
 				searching = false;
 				successfulRequest = true;
-				console.log(data);
+				//console.log(data);
 				if (data.artists.length > 0) {
-					console.log(data);
+					//console.log(data);
 					successfulSearch = true;
 					searchResults = data.artists;
 				} else {
@@ -37,7 +38,7 @@
 				}
 			})
 			.catch((error) => {
-				console.error("Error while searching for places:", error);
+				console.error("Error while searching for artists:", error);
 				successfulRequest = false;
 				successfulSearch = false;
 				searchResults = [];
@@ -71,11 +72,19 @@
         }, 100);
     }
 
+	$: {
+		if(failedFinding){
+			setTimeout(function() {
+				failedFinding = null;
+			}, 1500);
+		}
+	}
+
 </script>
 
 <div class="container">
     <form on:submit={searchArtists}>
-        <div class="artistSearchBar" class:is-searching={searching}>
+        <div class="artistSearchBar" class:is-searching={searching} class:failed={failedFinding}>
             <input
                 id="cityInput"
                 type="text"
@@ -180,6 +189,31 @@
         animation: rotate-gradient 3s linear infinite;
     }
 
+	@keyframes fadeIt {
+		0%   { background-color: #e6370400; }
+		50%  { background-color: #e6370488; }
+		100% { background-color: #e63704FF; }
+	}
+
+	.backgroundAnimated{
+
+}
+
+	.artistSearchBar.failed::before {
+        content: "";
+        position: absolute;
+        top: -3px;
+        left: -3px;
+        right: -3px;
+        bottom: -10px;
+        z-index: 0;
+        border-radius: inherit;
+
+        background: #e63704;
+		background-image:none !important;
+			animation: fadeIt 0.5s ease-in-out;
+    }
+
     .artistSearchBar input {
         flex-grow: 1;
         padding: 12px 15px;
@@ -218,12 +252,14 @@
 	}
 
     .results {
+		position: relative;
         overflow-y: auto;
         max-height: 250px;
         padding: 5px;
         margin-top: 10px;
         border-radius: 6px;
         background-color: #f9f9f9;
+        z-index: 1000;
     }
 
     .searchResult {
@@ -238,6 +274,7 @@
         font-size: 0.95rem;
         color: #333;
         transition: background-color 0.15s ease;
+        z-index: 1000;
     }
 
 	.searchResult:last-child {
