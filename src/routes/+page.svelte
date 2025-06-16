@@ -9,6 +9,7 @@
 	import { getHighlightedPathForGenreTree } from "$lib/utils/genreTreeUtils";
 
 	import { image } from "d3";
+	import { onMount } from 'svelte';
 
 	import Histogram from "$lib/components/charts/histogram.svelte";
 	import genreYearData from "$lib/data/genres_map.json";
@@ -90,6 +91,16 @@
 			genreSearch = [];
 		}
 	}
+
+	const defaultTargetId = 'info';
+
+	onMount(() => {
+		window.location.hash = defaultTargetId;
+		const targetElement = document.getElementById(defaultTargetId);
+		if (targetElement) {
+			targetElement.scrollIntoView({ behavior: 'smooth' });
+		}
+	});
 </script>
 
 <div id="start">
