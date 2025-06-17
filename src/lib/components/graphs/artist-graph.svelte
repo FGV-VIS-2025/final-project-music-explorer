@@ -42,7 +42,7 @@
         { key: "ms", text: "Membros da banda selecionada 🖱️", color: colorPallete[2], clickable: true},
         { key: "im", text: "Bandas que o artista selecionado fez/faz parte🖱️", color: colorPallete[3], clickable: true},
         { key: "gc", text: "Teve uma música regravada pelo artista/banda selecionado🖱️", color: colorPallete[4], clickable: true},
-        { key: "default", text: "Não relacionado com o artist/banda selecionado", color: "#a0a0a0", clickable: false},
+        { key: "default", text: "Não relacionado com o artista/banda selecionado", color: "#a0a0a0", clickable: false},
     ];
 
     legendItemDetails.forEach(item => {
