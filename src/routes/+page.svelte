@@ -161,7 +161,7 @@
 						<div id = "external-resources">
 							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> GitHub do projeto </a>
 							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> Paper </a>
-							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> Vídeo de demonstração </a>
+							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> Vídeo </a>
 						</div>
 					<div id="authors">
 					<h2>Autores</h2>
@@ -346,7 +346,7 @@
 	}
 
 	#info {
-		padding: 5% 10% 5% 10%;
+		padding: 5% 5% 5% 5%;
 	}
 
 	#info h1 {
