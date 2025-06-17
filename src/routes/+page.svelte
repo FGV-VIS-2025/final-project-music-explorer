@@ -1,8 +1,8 @@
 <script>
-	import ArtistGraph from "$lib/components/graphs/artist-graph.svelte";
-	import SearchArtist from "$lib/components/selectors/get-artist.svelte";
-	import ExpandedStack from "$lib/components/selectors/expanded-stack.svelte";
-	import ArtistInfo from "$lib/components/artist-info.svelte";
+    import ArtistGraph from "$lib/components/graphs/artist-graph.svelte";
+    import SearchArtist from "$lib/components/selectors/get-artist.svelte";
+    import ExpandedStack from "$lib/components/selectors/expanded-stack.svelte";
+    import ArtistInfo from "$lib/components/artist-info.svelte";
 
 	import CollapsibleTree from "$lib/components/graphs/genres-tree.svelte";
 	import rawData from "$lib/data/genres.json";
@@ -13,6 +13,11 @@
 
 	import Histogram from "$lib/components/charts/histogram.svelte";
 	import genreYearData from "$lib/data/genres_map.json";
+    //artist info sidebar related variables
+    let nodeMap = new Map();
+    let displayInfo = true; // Sidebar starts as visible
+    let infoArtist;
+    let forceHighlight;
 
 	//Search variables
 	let searchArtist;
@@ -24,17 +29,9 @@
 	let expanding = false;
 	let activeLegendItems;
 
-	//artist info sidebar related variables
-	let nodeMap = new Map();
-	let displayInfo = true;
-	let infoArtist;
-	let forceHighlight;
-
 	$: console.log("info:", infoArtist);
 
-	$: infoDisplay = displayInfo ? "block" : "none";
-
-	function showInfo() {
+    function showInfo() {
 		displayInfo = !displayInfo;
 	}
 
@@ -229,23 +226,25 @@
 			selectedNodeId={infoArtist ? infoArtist.id : null}
 		/>
 
-		<button on:click={showInfo} id="display-button" style="border: none;">
-			{#if displayInfo}
-				<img src={`icons/close.svg`} height="20rem" alt="close" />
-			{:else}
-				<img src={`icons/chevron_left.svg`} height="20rem" alt="show" />
-			{/if}
-		</button>
-
-		<div id="artist-info" style="display: {infoDisplay};">
-			<ArtistInfo
-				artist={infoArtist}
-				activeLegend={activeLegendItems}
-				{nodeMap}
-				{expanding}
-				bind:barHighlight={forceHighlight}
-				bind:clickedGenre={clickedGenre}
-			/>
+        
+		<div id="artist-info-container" class:closed={!displayInfo}>
+            <button on:click={showInfo} id="display-button" style="border: none;">
+                {#if displayInfo}
+                    <img src={`icons/close.svg`} height="20rem" alt="close" />
+                {:else}
+                    <img src={`icons/chevron_left.svg`} height="20rem" alt="show" />
+                {/if}
+            </button>
+			<div class="artist-info-content">
+                <ArtistInfo
+                    artist={infoArtist}
+                    activeLegend={activeLegendItems}
+                    nodeMap={nodeMap}
+                    expanding={expanding}
+                    bind:barHighlight={forceHighlight}
+                    bind:clickedGenre={clickedGenre}
+                />
+            </div>
 		</div>
 	</div>
 
@@ -475,6 +474,11 @@
 		background-color: var(--accent-black);
 	}
 
+    #graph1 {
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+
 	#chart-selector {
 		position: fixed;
 		top: 120px;
@@ -487,16 +491,14 @@
 		height: 40px;
 	}
 
-	#chart-selector ul {
-		list-style-type: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		width: 90%;
-		height: 100%;
-		justify-content: space-around;
-		align-items: center;
-	}
+    .app-container {
+        /* This is now the positioning context for the sidebar */
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        /* This prevents a scrollbar if any weirdness happens */
+        overflow: hidden;
+    }
 
 	#chart-selector li {
 		height: 100%;
@@ -526,41 +528,11 @@
 		background-color: yellow;
 	}
 
-	#display-button {
-		position: absolute;
-		top: 130px;
-		right: 45px;
-		z-index: 1000;
-		cursor: pointer;
-		display: flex;
-	}
-
 	#search-bar {
 		position: absolute;
 		top: 40px;
 		right: 40px;
 		width: 500px;
-	}
-
-	#artist-info {
-		position: absolute;
-		top: 120px;
-		bottom: 40px;
-		right: 40px;
-		z-index: 900;
-
-		background-color: var(--accent-black);
-		border-radius: 8px;
-		border: 2px solid rgba(100, 100, 100, 0.6);
-
-		padding: 10px;
-		box-shadow: 0 0px 5px rgba(256, 256, 256, 0.25);
-		/* height: 90%; */
-		width: 500px;
-		box-sizing: border-box;
-
-		overflow-y: scroll;
-		overflow-x: hidden;
 	}
 
 	#expanded-stack {
@@ -627,7 +599,7 @@
 		background-color: #0056b3;
 	}
 
-	    .results {
+    .results {
 		position: relative;
         overflow-y: auto;
         max-height: 200px;
@@ -666,4 +638,53 @@
 	/* main { */
 	/* 	background-color: var(--accent-black); */
 	/* } */
+    .main-content {
+        /* This now takes up the full space, all the time */
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    
+    #artist-info-container {
+        /* === This is the core of the new logic === */
+        position: absolute;
+        top: 100px;
+        right: 0;
+        bottom: 0;
+        /* height: 100%; */
+        z-index: 10; /* Make sure it renders ON TOP of the main content */
+
+        width: 515px;
+        background-color: #2a2a2a;
+        
+        /* We go back to animating transform, which is perfect for overlays */
+        transform: translateX(0);
+        transition: transform 0.35s ease-in-out;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* When closed, we move it 100% of its own width to the right */
+    #artist-info-container.closed {
+        transform: translateX(100%);
+    }
+
+    .artist-info-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    #display-button {
+        position: absolute;
+        top: 10px;
+        left: -45px;
+        z-index: 10;
+        border: none;
+        background-color: #333;
+        padding: 8px 5px;
+        border-radius: 5px 0 0 5px;
+        cursor: pointer;
+    }
 </style>
