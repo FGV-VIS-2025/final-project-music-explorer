@@ -556,8 +556,10 @@
 		display: flex;
 		width: 100%;
 		position: relative;
-		background-color: rgba(100, 100, 100, 0.6);
-		box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6);
+		
+        background-color: #2a2a2a;
+		/* background-color: rgba(100, 100, 100, 0.6); */
+		/* box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6); */
 		border-radius: 8px;
 		overflow: hidden;
 	}
@@ -567,7 +569,7 @@
 		padding: 12px 15px;
 		border: none;
 		border-radius: 6px 0 0 6px;
-		background-color: var(--accent-black);
+        background-color: #2a2a2a;
 		color: white;
 		font-size: 1rem;
 		position: relative;
