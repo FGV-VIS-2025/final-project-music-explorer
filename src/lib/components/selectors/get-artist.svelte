@@ -147,9 +147,9 @@
         display: flex;
         width: 100%;
         position: relative;
-        background-color: rgba(100, 100, 100, 0.6);
-        box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6);
-        border-radius: 8px;
+        /* background-color: rgba(100, 100, 100, 0.6); */
+        /* box-shadow: 0px 0px 5px rgba(100, 100, 100, 0.6); */
+        border-radius: 6px;
         overflow: hidden;
 
         padding: 2px;
@@ -215,7 +215,7 @@
         padding: 12px 15px;
         border: none;
         border-radius: 6px 0 0 6px;
-        background-color: var(--accent-black);
+        background-color: #2a2a2a;
         color: white;
         font-size: 1rem;
         position: relative;
@@ -229,9 +229,10 @@
     .artistSearchBar button[type="submit"] {
         padding: 0 18px;
         color: white;
-        background-color: #007bff;
+        /* background-color: #007bff; */
+		background-color: #333;
         border: none;
-        border-radius: 0 6px 6px 0;
+        /* border-radius: 0 6px 6px 0; */
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -248,7 +249,8 @@
 	}
 
 	.artistSearchBar button[type="submit"]:hover {
-		background-color: #0056b3;
+		/* background-color: #0056b3; */
+		filter: invert(1);
 	}
 
     .results {
