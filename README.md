@@ -1,3 +1,7 @@
+# Link para o vídeo da entrega final
+
+https://drive.google.com/drive/folders/18VkuCk7kAVLHZSQ55fXizphtAgaclS4O?usp=drive_link
+
 # create-svelte
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
