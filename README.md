@@ -2,45 +2,6 @@
 
 https://drive.google.com/drive/folders/18VkuCk7kAVLHZSQ55fXizphtAgaclS4O?usp=drive_link
 
-# create-svelte
-
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
-
 # Pôster
 
 ## Introdução
@@ -99,3 +60,16 @@ Também há uma visualização secundária em forma de dendrograma para visualiz
 relações entre gêneros. Visualizar os diferentes tipos de gêneros permite que
 um usuário entenda melhor como um artista se posiciona no mundo da música e quais
 gêneros possívelmente influenciam suas produções.
+
+## Divisão de tarefas
+
+A divisão geral das tarefas não foi linear, e todos membros trabalharam de forma iterativa sobre o trabalho do outro.
+Mas no geral a divisão seguiu por essa linha:
+
+Daniel Miranda: desenvolvimento da legenda e filtro por cor do grafo de artistas, elaboração da animação
+e estilo da sidebar, legendas em alguns dos gráficos.
+
+Pedro Tokar: elaboração inicial do grafo de artistas, conexão com a API, elaboração dos gráficos da sidebar.
+
+Vitor do Nascimento: interação entre tags e os gráficos, elaboração da segunda parte da visualização e histograma.
+
