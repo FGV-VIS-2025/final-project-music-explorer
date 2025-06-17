@@ -531,8 +531,8 @@
 	#search-bar {
 		position: absolute;
 		top: 40px;
-		right: 40px;
-		width: 500px;
+		right: 0px;
+		width: 540px;
 	}
 
 	#expanded-stack {
@@ -639,25 +639,22 @@
 	/* 	background-color: var(--accent-black); */
 	/* } */
     .main-content {
-        /* This now takes up the full space, all the time */
         width: 100%;
         height: 100%;
         position: relative;
     }
     
     #artist-info-container {
-        /* === This is the core of the new logic === */
         position: absolute;
         top: 100px;
         right: 0;
         bottom: 0;
         /* height: 100%; */
-        z-index: 10; /* Make sure it renders ON TOP of the main content */
+        z-index: 10;
 
-        width: 515px;
+        width: 540px;
         background-color: #2a2a2a;
         
-        /* We go back to animating transform, which is perfect for overlays */
         transform: translateX(0);
         transition: transform 0.35s ease-in-out;
 
@@ -665,7 +662,6 @@
         flex-direction: column;
     }
 
-    /* When closed, we move it 100% of its own width to the right */
     #artist-info-container.closed {
         transform: translateX(100%);
     }
@@ -678,13 +674,20 @@
 
     #display-button {
         position: absolute;
-        top: 10px;
-        left: -45px;
+        top: 0;
+        right: 100%;
         z-index: 10;
-        border: none;
+		padding: 2px;
         background-color: #333;
-        padding: 8px 5px;
         border-radius: 5px 0 0 5px;
         cursor: pointer;
     }
+
+	#display-button img {
+		display: block;
+	}
+
+	#display-button:hover {
+		filter: invert(1);
+	}
 </style>
