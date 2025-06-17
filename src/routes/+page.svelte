@@ -94,31 +94,101 @@
 
 	const defaultTargetId = 'info';
 
-	onMount(() => {
-		window.location.hash = defaultTargetId;
-		const targetElement = document.getElementById(defaultTargetId);
-		if (targetElement) {
-			targetElement.scrollIntoView({ behavior: 'smooth' });
-		}
-	});
+	// onMount(() => {
+	// 	window.location.hash = defaultTargetId;
+	// 	const targetElement = document.getElementById(defaultTargetId);
+	// 	if (targetElement) {
+	// 		targetElement.scrollIntoView({ behavior: 'smooth' });
+	// 	}
+	// });
 </script>
 
 <div id="start">
 	<div id="info">
-		<h1>Music Explorer</h1>
-		<p>
-			Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui
-			laudantium nostrum placeat impedit, maiores laborum rem? Magnam
-			molestias cum repellat odit placeat impedit, maiores laborum rem?
-			Magnam molestias cum repellat odit placeat impedit, maiores laborum
-			rem? Magnam molestias cum repellat odit Lorem ipsum dolor sit amet
-			consectetur adipisicing elit. Voluptatum vitae, doloribus asperiores
-			sit nulla illo sunt, libero neque rerum obcaecati repellat minus
-			dolore dolorum nam ad accusamus velit accusantium ratione.
-		</p>
+		<div id="intro-text">
+			<div class="subitem">
+				<div>
+					<h1>Music Explorer</h1>
+				</div>
+				<div>
+					<p>
+						A <a target="_blank" href="https://pt.wikipedia.org/wiki/M%C3%BAsica">
+						música</a> é um tema muito vasto e presente diariamente no cotidiano da
+						população. São inúmeras as pessoas que dedicam parte de seu tempo
+						para ouvir música, e igualmente massivo é o número de pessoas que
+						produzem novas músicas, desde pequenos artistas independentes até
+						grandes nomes que produzem e lançam hits anualmente.
+					</p>
+					<p>
+						Quando se observa a industria músical atualmente, percebe-se que existem
+						muitas relações entre as pessoas e grupos que a compõe. Indo desde artistas
+						que colaboram para a produção de uma música até artistas que se juntam
+						em um grupo para fazer novas composições, as relações são incontáveis.
+					</p>
+					<p>
+						Este site tem como objetivo fornecer uma ferramenta fundamentada
+						em princípios da visualização de dados para exibir essas relações
+						e outras informações pertinentes sobre o tema. Por meio de um grafo
+						interativo, é possível obter diversos <i>insights</i> sobre o
+						mundo da música e sobre como diferentes artistas se relacionam.
+					</p>
+					<p>
+						O grafo inicia com um artista e suas relações. Para explorar algum artista
+						visível, aperte nele. Para explorar um artista que não está
+						sendo exibido, busque na barra de pesquisa (e tenha em mente
+						que artistas sem relações ou de tributo não aparecem no grafo).
+						Experimente interagir com a legenda e com as tags que ficam
+						na barra laterial para descobrir mais interações!
+					</p>
+					<p><i style="font-size: 90%">As primeiras interações serão mais lentas
+					devido ao carregamento dos artistas. Depois de algumas explorações,
+					a experiência se tornará mais fluida.</i>
+					</p>
 
-		<a href="#graph1" class="explore"> Explorar! </a>
-
+					<a href="#graph1" class="explore"> Explorar! </a>
+				</div>
+			</div>
+			<div class="subitem">
+				<div>
+					<h2 style="margin-top: auto;">Sobre a página</h2>
+				</div>
+				<div>
+					<p>
+						Essa página foi desenvolvida como entrega para o projeto final da disciplina
+						de Visualização de Dados, matéria da graduação em Ciência de Dados e Inteligência
+						Artifical da FGV-EMAp.
+					</p>
+						<div id = "external-resources">
+							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> GitHub do projeto </a>
+							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> Paper </a>
+							<a href="https://github.com/FGV-VIS-2025/final-project-music-explorer" target="_blank" class="resource"> Vídeo de demonstração </a>
+						</div>
+					<div id="authors">
+					<h2>Autores</h2>
+						<ul>
+							<li>
+								<a href="https://github.com/ddanieldma" target="_blank">
+									<span class="link-text">Daniel Miranda</span>
+									<img src="github-mark.svg" alt="github">
+								</a>
+							</li>
+							<li>
+								<a href="https://github.com/pedrotokar" target="_blank">
+									<span class="link-text">Pedro Tokar</span>
+									<img src="github-mark.svg" alt="github">
+								</a>
+							</li>
+							<li>
+								<a href="https://github.com/vitor-n" target="_blank">
+									<span class="link-text">Vitor do Nascimento</span>
+									<img src="github-mark.svg" alt="github">
+								</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
 		<a href="#graph1" class="arrow-down-dummy">
 			<img src="icons/arrow_down.svg" alt="" />
 		</a>
@@ -276,7 +346,7 @@
 	}
 
 	#info {
-		padding: 5% 20% 5% 10%;
+		padding: 5% 10% 5% 10%;
 	}
 
 	#info h1 {
@@ -297,6 +367,56 @@
 
 	#info:not(:target) .arrow-down-dummy {
 		display: none;
+	}
+
+
+	#intro-text{
+		display: grid;
+		grid-template-columns: 65% 35%;
+		align-items: baseline;
+	}
+
+	#intro-text div {
+		padding-right: 5%;
+	}
+
+	.subitem {
+		display: grid;
+		grid-template-columns: subgrid;
+	}
+
+	#authors a {
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	#external-resources {
+		display: flex;
+        flex-wrap: wrap;
+	}
+
+	a.resource {
+		/* color: var(--accent-black); */
+		background-color: #444;
+		text-decoration: none;
+		font-size: 100%;
+		border-radius: 4px;
+		padding: 4px;
+		margin: 0 1ch 0 0;
+/* 		font-weight: bold; */
+	}
+
+	li {
+		margin: 1em 0;
+	}
+	li img {
+		height: 1em;
+		filter: invert(1);
+	}
+
+	.link-text {
+		text-decoration: underline;
 	}
 
 	.arrow-down-dummy {
